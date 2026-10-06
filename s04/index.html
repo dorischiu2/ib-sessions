@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 4 · Harbour Time Travellers</title>
+<style>
+  :root{--bg1:#ffecd2;--bg2:#fcb69f;--ink:#2d2a4a;--card:#fff;--pri:#7b5cff;--pri2:#5a3de0;--ok:#22a06b;--okbg:#e3fcef;--bad:#e2483d;--badbg:#ffebe9;--warn:#ff9f1c;--sky:#4cc9f0;--pink:#ff5d8f;--yellow:#ffd23f}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Trebuchet MS","Segoe UI","Noto Sans",system-ui,-apple-system,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;font-size:18px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(45,42,74,.95);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  header .title{font-weight:bold;flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+  #timer.low{background:var(--warn);color:#2d2a4a} #timer.over{background:var(--pink)}
+  #progress{height:6px;background:rgba(255,255,255,.4)} #progress div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--pri),var(--pink));transition:width .5s}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .card{background:var(--card);border-radius:22px;padding:20px 20px 22px;margin:14px 0;box-shadow:0 8px 24px rgba(90,61,224,.15);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.97) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-size:28px;margin:4px 0 8px;color:var(--pri2)} h2{font-size:22px;margin:4px 0 10px;color:var(--pri2)} h3{margin:8px 0}
+  .muted{color:#6b6790;font-size:15px}
+  .tag{display:inline-block;font-size:13px;font-weight:bold;padding:2px 10px;border-radius:999px;background:#efeaff;color:var(--pri2);margin-bottom:6px}
+  label.q{display:block;font-weight:bold;margin:16px 0 6px}
+  input[type=text],textarea{width:100%;font:inherit;padding:10px 12px;border:3px solid #ddd6ff;border-radius:14px;outline:none;background:#fbfaff}
+  input[type=text]:focus,textarea:focus{border-color:var(--pri)} textarea{min-height:140px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{border:2px solid #ddd6ff;background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+  .chip:hover,.chip.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .opt{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:18px;padding:12px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+  .opt .big{font-size:32px;display:block} .opt:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .opt.sel{border-color:var(--pri);background:#f3efff;box-shadow:0 0 0 3px rgba(123,92,255,.25)}
+  .btn{display:inline-block;border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:bold;cursor:pointer;background:linear-gradient(180deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 4px 0 #3f2aa8;margin:6px 6px 0 0;text-decoration:none}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:linear-gradient(180deg,#ffe066,#ffc300);color:var(--ink);box-shadow:0 4px 0 #c99700}
+  .btn.ghost{background:#fff;color:var(--pri2);border:2px solid #ddd6ff;box-shadow:none}
+  .story p{margin:0 0 12px;font-size:19px} .story p.short{font-weight:bold;font-size:21px;color:var(--pink)}
+  .branch{background:#fff8e1;border-left:5px solid var(--yellow);padding:8px 12px;border-radius:8px;margin:0 0 12px}
+  .story em{color:#1d5fa8}
+  .box{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:10px 0;font-size:17px}
+  .box table,.ctx table{border-collapse:collapse;width:100%;font-size:16px;margin:6px 0}
+  .box td,.box th,.ctx td,.ctx th{border:1px solid #cfd8e3;padding:5px 8px;text-align:left}
+  .box th,.ctx th{background:#eaf4ff}
+  .ctx{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:8px 0 4px;font-size:17px}
+  .choice-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#e0f7ff,#f3efff)}
+  .choice-box h3{margin:0 0 10px;font-size:19px} .choices{display:grid;gap:10px}
+  .choices .opt{text-align:left;display:flex;gap:10px;align-items:center} .choices .opt .big{font-size:26px;display:inline}
+  .answers{display:grid;gap:10px;margin-top:12px}
+  .ans{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;font:inherit;text-align:left;cursor:pointer;display:flex;gap:10px}
+  .ans b.letter{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:#efeaff;color:var(--pri2)}
+  .ans:hover:not(:disabled){border-color:var(--sky)} .ans.right{border-color:var(--ok);background:var(--okbg)} .ans.wrong{border-color:var(--bad);background:var(--badbg)}
+  .ans:disabled,.opt:disabled{cursor:default;color:var(--ink);opacity:1} .choices .opt:disabled:not(.sel){opacity:.55}
+  .feedback{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:17px;animation:pop .3s}
+  .feedback.good{background:var(--okbg);border:2px solid var(--ok)} .feedback.bad{background:var(--badbg);border:2px solid var(--bad)}
+  .hintbox{margin-top:12px;padding:10px 14px;border-radius:14px;background:#fff8e1;border:2px dashed var(--warn);font-size:16px}
+  .reread-panel{margin-top:10px;max-height:320px;overflow:auto;border:2px solid #ece8ff;border-radius:14px;padding:12px;background:#fdfcff}
+  .reread-panel p{font-size:16px;margin:0 0 8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px} .stats span{background:#efeaff;border-radius:999px;padding:4px 12px;font-size:15px}
+  .skill{margin:10px 0} .skill .row{display:flex;justify-content:space-between;gap:8px;font-weight:bold;flex-wrap:wrap}
+  .bar{height:16px;border-radius:999px;background:#eee;overflow:hidden;margin-top:4px} .bar div{height:100%;border-radius:999px}
+  .lvl1{background:#ff8fa3}.lvl2{background:#ffc300}.lvl3{background:#4cc9f0}.lvl4{background:#22a06b}
+  pre#resultText{white-space:pre-wrap;word-break:break-word;background:#fbfaff;border:2px solid #ece8ff;border-radius:14px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;z-index:50;font-weight:bold;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:pop .3s;max-width:90%;text-align:center}
+  .burst{position:fixed;pointer-events:none;font-size:28px;z-index:60;animation:fly 1s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+  .conf{display:flex;gap:8px;flex-wrap:wrap} .conf .opt{flex:1;min-width:120px}
+  .plan{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px} .plan td{padding:6px 8px;border-bottom:1px dashed #ddd}
+  .rate{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #e5e0ff;flex-wrap:wrap}
+  .rate .lbl{flex:1;min-width:160px} .rate .chips{margin-top:0}
+  canvas.sketch{width:100%;height:260px;border:3px dashed #ddd6ff;border-radius:14px;background:#fff;touch-action:none;display:block;margin-top:8px}
+  details summary{cursor:pointer}
+  @media (max-width:520px){body{font-size:17px} h1{font-size:24px} .story p{font-size:18px} header .title{font-size:13px} header{gap:6px;padding:8px 10px} .pill{font-size:14px;padding:3px 9px}}
+</style>
+</head>
+<body>
+<header><div class="title" id="hdrTitle"></div><div class="pill" id="stars">⭐ 0</div><div class="pill" id="hintsPill">💡 0</div><div class="pill" id="timer">⏱️ 10:00</div></header>
+<div id="progress"><div></div></div>
+<main id="app"></main>
+<script>
+/* ===== SESSION CONTENT (original, written for Alexa) ===== */
+const SRC_A = '<b>📔 Source A</b>: diary of Ah Ling, aged 12, who lived on her family\u2019s sampan (small wooden boat), 1935<br><i>"Our whole family lives on our boat: Ma, Ba, Grandmother, my two brothers and me. Every morning before sunrise, Ba goes fishing and Ma sells the fish at the market. When the typhoon signal is raised, hundreds of boats squeeze into the shelter, so close that you can step from one deck to the next. It is noisy and it smells of fish and smoke, but I feel safe. I wish I could go to school like the children who live on land, but Ba says the sea is our school."</i>';
+const SRC_B = '<b>📘 Source B</b>: from a guidebook for overseas visitors, written by a British travel writer, 1936<br><i>"No visitor should miss the harbour, a most picturesque sight! Thousands of junks and sampans bob on the sparkling water, their sails glowing in the sunset. The boat people appear entirely content with their simple life upon the water. For a few cents, a sampan may be hired for a delightful tour, and the traveller will be charmed by the smiling faces of the boat children."</i>';
+const CONFIG = {
+  num:4, subject:'Individuals & Societies', icon:'🌏', title:'Harbour Time Travellers',
+  introHeading:'Hi {student}! Time to travel back to old Hong Kong! ⏳⛵',
+  introText:'You and a fellow time traveller zoom back to Victoria Harbour in the 1930s. There you discover two old documents about life on the water. Your job as a history detective: read them, work out who wrote them and why, and decide whether they agree.',
+  plan:[['🎨 Prepare your time trip','~1 min'],['⛵ Explore the harbour & read 2 sources','~3 min'],['❓ 8 history questions','~3½ min'],['📝 Compare the sources','~2½ min']],
+  setupHeading:'Prepare your time trip, {student}!',
+  setup:[
+    {id:'Name', type:'name', label:'Name your fellow time traveller', ideas:['Kit','Mia','Sunny','Theo','Ivy'], fallback:'Kit', short:'a name', resultLabel:'Time traveller'},
+    {id:'pron', type:'pron', label:'Is your time traveller a...'},
+    {id:'machine', type:'cards', label:'Choose your time machine', short:'a time machine', resultLabel:'Time machine', custom:'My own idea', customPlaceholder:'e.g. a magic tram',
+     options:[
+      {key:'hourglass', icon:'⏳', label:'Giant hourglass', vars:{arrive:'The giant hourglass flips, sand swirls, and WHOOSH!'}},
+      {key:'bike', icon:'🚲', label:'Time-travel bike', vars:{arrive:'You pedal faster and faster until the world blurs, and WHOOSH!'}},
+      {key:'dragon', icon:'🐉', label:'Friendly dragon', vars:{arrive:'The friendly dragon flaps its golden wings, the clouds spin, and WHOOSH!'}}],
+     customVars:t=>({arrive:'You climb into your '+t+', press the big red button, and WHOOSH!'})}
+  ],
+  setupGo:'⏳ Travel back in time!', partTag:'⛵ Time trip',
+  storyTitle:'Victoria Harbour, 1935',
+  parts:[
+    {paras:['{arrive} You and {Name} land on a wooden pier in <b>1935</b>.',
+      'The harbour is crowded with boats: big <b>junks</b> with brown, batwing-shaped sails and hundreds of little <b>sampans</b>. Many families don\u2019t just work on these boats; they <i>live</i> on them.',
+      '"Let\u2019s find out what life was really like here," says {Name}.'],
+     choice:{q:'Who will you follow for the morning?', opts:[
+      {icon:'🐟', label:'A fishing family', text:'You follow a fishing family as they sail out before sunrise. The nets are heavy, the deck is slippery, and everyone, even the youngest, has a job.'},
+      {icon:'⛴️', label:'A ferry deckhand', text:'You help a ferry deckhand coil thick ropes as passengers hurry across the harbour. "Every day the same," he laughs. "Back and forth, back and forth!"'},
+      {icon:'🧺', label:'A floating market seller', text:'You join a seller paddling between boats with baskets of rice, vegetables and firewood, calling out prices as she goes.'}]}},
+    {paras:['Later, {Name} spots two old documents tucked inside a sea chest. "Sources!" {Sub} whispers. "Real history detectives always read them carefully."',
+      '<div class="box">'+SRC_A+'</div>','<div class="box">'+SRC_B+'</div>',
+      '<p class="muted">✏️ These two sources were written for this quest, based on real history of Hong Kong\u2019s boat communities.</p>']}
+  ],
+  reference:SRC_A+'<br><br>'+SRC_B,
+  questions:[
+    {skill:'Understanding sources', crit:'A', icon:'📖', q:'According to <b>Source A</b>, what happens when the typhoon signal is raised?',
+     opts:[{t:'Everyone moves onto land', fb:'Source A doesn\u2019t say that. Find the sentence with "typhoon signal".'},
+           {t:'The boats sail far out to sea', fb:'The opposite! Boats go somewhere safe. Re-read the typhoon sentence.'},
+           {t:'Hundreds of boats squeeze into the shelter, very close together', ok:true, fb:'Yes! "So close that you can step from one deck to the next."'},
+           {t:'Ba goes fishing before sunrise', fb:'That\u2019s what happens every morning, not during a typhoon.'}],
+     hint:'Scan Source A for the words "typhoon signal". What does the next part of that sentence say?'},
+    {skill:'Understanding sources', crit:'A', icon:'📖', q:'Which statement is supported by <b>BOTH</b> sources?',
+     opts:[{t:'Many people lived and worked on boats in the harbour', ok:true, fb:'Correct! Source A: "Our whole family lives on our boat"; Source B: "the boat people... their simple life upon the water".'},
+           {t:'Boat children wished they could go to school', fb:'Only Source A says this. Source B doesn\u2019t mention school.'},
+           {t:'Sampans could be hired for tours', fb:'Only Source B mentions tours.'},
+           {t:'Life on the boats was noisy and smelly', fb:'Only Source A says this. Source B makes it sound charming.'}],
+     hint:'Check each statement: can you find it in Source A AND in Source B?'},
+    {skill:'Origin & purpose', crit:'B', icon:'🔎', q:'Source A is a <b>primary source</b>. Why?',
+     opts:[{t:'Because it is printed in a book', fb:'Being in a book doesn\u2019t make a source primary. It\u2019s about <i>who</i> wrote it and <i>when</i>.'},
+           {t:'Because it is the oldest source', fb:'Source A is from 1935 and B from 1936, but age alone isn\u2019t the reason.'},
+           {t:'Because everything in it is true', fb:'Primary sources can still be one-sided! "Primary" means something else.'},
+           {t:'Because it was written at the time by someone who lived through it', ok:true, fb:'Exactly! A primary source comes from the time and from someone who experienced it. (Source B is also from the 1930s, written by a visitor.)'}],
+     hint:'Primary = from the time, by someone who was there. Secondary = written later by someone looking back.'},
+    {skill:'Origin & purpose', crit:'B', icon:'🔎', q:'What was the most likely <b>purpose</b> of Source B?',
+     opts:[{t:'To record a family\u2019s private feelings', fb:'That sounds more like Source A, a diary.'},
+           {t:'To attract visitors by making the harbour sound charming', ok:true, fb:'Yes! It\u2019s a guidebook: "No visitor should miss..." and "delightful tour". It\u2019s written to make people want to visit.'},
+           {t:'To complain about the boat people', fb:'It actually praises the harbour. Think about who reads a guidebook.'},
+           {t:'To teach children how to fish', fb:'There\u2019s nothing about fishing lessons. Look at the source\u2019s type: a guidebook.'}],
+     hint:'Who reads a guidebook, and what does the writer want them to do? Look at words like "No visitor should miss..."'},
+    {skill:'Comparing perspectives', crit:'D', icon:'⚖️', q:'How do the two sources <b>differ</b> in the way they describe life on the boats?',
+     opts:[{t:'They don\u2019t differ at all', fb:'Look again. Does Source B mention any difficulties?'},
+           {t:'Source A says life was easy; Source B says it was hard', fb:'It\u2019s the other way round!'},
+           {t:'Source B gives more details about the family\u2019s jobs', fb:'Source A gives the details about jobs (fishing, selling at market).'},
+           {t:'Source A shows hard work and wishes; Source B makes it sound simple and happy', ok:true, fb:'Great comparison! A mentions noise, smell and not going to school; B says the boat people "appear entirely content".'}],
+     hint:'Find one difficult thing in Source A. Does Source B mention anything difficult, or only nice things?'},
+    {skill:'Comparing perspectives', crit:'D', icon:'⚖️', q:'Why might the guidebook writer see boat life <b>differently</b> from Ah Ling?',
+     opts:[{t:'The writer had better eyesight', fb:'Ha! It\u2019s not about eyesight. Think about <i>where each writer stands</i>: inside the boat life or outside it?'},
+           {t:'The writer wrote a year later, so things had changed', fb:'One year is unlikely to change everything. The big difference is <i>who</i> each writer is.'},
+           {t:'The writer was an outsider visiting, while Ah Ling actually lived it', ok:true, fb:'Yes! Outsiders see the surface ("smiling faces"); insiders know the hard parts. That\u2019s called <b>perspective</b>.'},
+           {t:'Ah Ling didn\u2019t know about her own life', fb:'She knows her own life best! Think about the guidebook writer\u2019s view instead.'}],
+     hint:'One writer LIVED on a boat. The other was VISITING. How might that change what they notice?'},
+    {skill:'Judging reliability & usefulness', crit:'D', icon:'🧭', q:'Which question is <b>most useful</b> when deciding how reliable Source B is?',
+     opts:[{t:'Who wrote it, and why?', ok:true, fb:'Exactly! Knowing it\u2019s a tourist guidebook tells us it may only show the positive side.'},
+           {t:'How long is it?', fb:'Length doesn\u2019t tell you if a source is trustworthy.'},
+           {t:'Does it use beautiful words?', fb:'Beautiful words can actually be a warning sign that it\u2019s trying to persuade!'},
+           {t:'Is the paper old?', fb:'Old paper shows its age, not whether it gives the full picture.'}],
+     hint:'Historians always ask about the ORIGIN and PURPOSE of a source.'},
+    {skill:'Judging reliability & usefulness', crit:'D', icon:'🧭', q:'A historian wants to know how <b>boat children felt</b> about school. Which source is more useful?',
+     opts:[{t:'Source B, because it was written by an adult expert', fb:'The writer was a visitor and says nothing about school.'},
+           {t:'Source A, because a boat child describes her own feelings about school', ok:true, fb:'Spot on! "I wish I could go to school..." comes straight from a boat child. (It\u2019s still only <i>one</i> child, so a historian would look for more sources too.)'},
+           {t:'Both are equally useful', fb:'Only one source mentions school at all.'},
+           {t:'Neither is useful', fb:'One of them talks about exactly this! Look for "school".'}],
+     hint:'Which source mentions school? Who is speaking?'}
+  ],
+  written:[
+    {id:'compare', tag:'📝 History detective report', title:'Do the two sources agree? 🤔', skillLabel:'Comparing sources in writing', crit:'C/D',
+     prompt:'Write <b>3–4 sentences</b>. Explain how Sources A and B <b>agree</b> and how they <b>disagree</b>. Use <b>evidence from both</b>, and if you can, say <b>why</b> they might be different.',
+     starters:['Both sources show that...','However, Source A says...','whereas Source B says...','This might be because...'], minWords:20, sentences:[3,4],
+     clueWords:['both','however','whereas','source a','source b','because','diary','guidebook','visitor','purpose','perspective'], clueLabel:'🔎 Detective words spotted',
+     placeholder:'Both sources show that...'}
+  ],
+  finishHeading:'⏳ Welcome back to the present, {student}! 🎉',
+  key:{
+    myp:'Individuals & Societies A: Knowing & understanding (Q1–2) · B: Investigating, origin & purpose of sources (Q3–4) · D: Thinking critically, perspectives & reliability (Q5–8) · C: Communicating (the written comparison).',
+    how:'Alexa names a fellow traveller, chooses a time machine and picks whose morning to shadow (fishing family, ferry deckhand, or floating-market seller). These change the story only. **The two sources are fixed** and every question is about them.',
+    branches:'**Source A:** an invented diary of a 12-year-old girl living on a sampan in 1935 (family life, typhoon shelter, wish for school). **Source B:** an invented 1936 guidebook for overseas visitors (picturesque, "content", tours). Both are original, written for the quest, but they reflect real history: Hong Kong\u2019s boat-dwelling communities, typhoon shelters, and outsiders\u2019 romantic views of them.',
+    written:`**The task:** 3–4 sentences comparing the sources, with evidence from both.
+
+**Model answer (Level 4):**
+> *Both sources show that many people lived on boats in the harbour, as Source A says "our whole family lives on our boat" and Source B describes "the boat people". However, Source A shows that life was hard work, noisy and smelly, and that Ah Ling wished she could go to school, whereas Source B claims the boat people "appear entirely content". This might be because Source B is a guidebook written by a visitor to attract tourists, so it only shows the charming side, while Ah Ling actually lived the life.*
+
+| Skill | 1 🌱 | 2 🌿 | 3 🌳 | 4 🌟 |
+|---|---|---|---|---|
+| **Comparison & evidence** (D) | Describes one source only, or retells | Notes a similarity *or* difference, with little evidence | A similarity *and* a difference, with evidence from both sources | Clear similarity + difference, well-chosen quotes, **explains why** (origin/purpose/perspective) |
+| **Communicating** (C) | Unclear or 1 sentence | Some structure; few linking words | 3–4 organised sentences using comparison words (both, however, whereas) | Fluent, precise historical vocabulary (primary, purpose, perspective), sources named correctly |`,
+    gaps:[
+      ['A. Not reading precisely','Q1 = D, or Q2 picks a one-source statement','Skims instead of finding the exact line'],
+      ['B. "Primary = true"','Q3 = C','Confuses type of source with accuracy'],
+      ['C. Ignoring purpose','Q4 wrong; written treats B as neutral fact','Doesn\u2019t ask why a source was made'],
+      ['D. No perspective awareness','Q5/Q6 wrong','Hasn\u2019t yet met the idea that viewpoint shapes a source'],
+      ['E. Reliability by surface features','Q7 = B/C/D','Judges by length, age or nice language'],
+      ['F. Retelling not comparing','Written describes A then B without linking','Needs comparison connectives']],
+    tips:[
+      '**"5W" source stamp:** for any source (news, adverts, YouTube), ask Who? When? Why? For whom? What\u2019s missing? (B, C, E)',
+      '**Two-sided stories:** compare a restaurant\u2019s own ad with a customer review. Same place, different purpose. (C, D)',
+      '**Visit history in Hong Kong:** the Hong Kong Museum of History or a typhoon shelter walk (Causeway Bay, Aberdeen); ask "who would have written about this, and why?"',
+      '**Comparison sentence frames:** "Both... / However... / whereas... / This might be because..." (F)',
+      '**Highlighter hunt:** one colour for facts, one for opinions, in a short article. (A, D)'],
+    feeds:'Source reliability links directly to **Session 12 (Research Detective)**, the early-EE skills strand; perspectives link to **Session 11 (Think Lab, early TOK)**.'
+  }
+};
+
+/* ===== ENGINE ===== */
+const EMAIL_TO='Doris.s.chiu@gmail.com', EMAIL_CC='francoisdemange@hotmail.com';
+const TOTAL_SECONDS = CONFIG.seconds || 600;
+const PRONOUNS={she:{sub:'she',obj:'her',pos:'her'},he:{sub:'he',obj:'him',pos:'his'}};
+const QS = CONFIG.questions, PARTS = CONFIG.parts||[], WRITTEN = CONFIG.written||[];
+const S={student:'Alexa',setup:{},custom:{},choices:[],qIndex:0,answers:[],hintsUsed:0,stars:0,written:{},ratings:{},picks:{},sketched:{},confidence:null,started:null,finished:null,step:0,wIndex:0};
+let timerHandle=null,timeUpShown=false;
+const $=s=>document.querySelector(s), app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function optFor(item){ const v=S.setup[item.id]; if(v==='custom') return Object.assign({key:'custom',label:(S.custom[item.id]||'').trim()||item.customFallback||'my idea'}, {vars:item.customVars?item.customVars((S.custom[item.id]||'').trim()||item.customFallback||'my idea'):{}}); return (item.options||[]).find(o=>o.key===v); }
+function tokens(){
+  const T={student:S.student};
+  (CONFIG.setup||[]).forEach(it=>{
+    if(it.type==='name'){ T[it.id]=cap((S.setup[it.id]||'').trim())||it.fallback||'Sam'; }
+    else if(it.type==='pron'){ const p=PRONOUNS[S.setup[it.id]||'she']; T.sub=p.sub;T.obj=p.obj;T.pos=p.pos;T.Sub=cap(p.sub);T.Pos=cap(p.pos); }
+    else if(it.type==='text'){ T[it.id]=(S.setup[it.id]||'').trim()||it.fallback||''; }
+    else if(it.type==='cards'){ const o=optFor(it)||(it.options||[])[0]; T[it.id]=o.label; Object.assign(T,o.vars||{}); }
+  });
+  PARTS.forEach((p,i)=>{ if(p.choice){ const k=S.choices[i]; const o=p.choice.opts[k!=null?k:0]; Object.assign(T,o.vars||{}); T['choice'+(i+1)]=o.label; }});
+  if(CONFIG.extraTokens) Object.assign(T,CONFIG.extraTokens(T,S));
+  Object.keys(T).forEach(k=>{ if(typeof T[k]==='string' && !(('Cap_'+k) in T)) T['Cap_'+k]=cap(T[k]); });
+  return T;
+}
+function fill(str){ if(str==null) return ''; const T=tokens(); let out=String(str);
+  for(let pass=0;pass<2;pass++) out=out.replace(/\{(\w+)\}/g,(m,k)=>k in T?(pass===0&&/\{\w+\}/.test(T[k])?T[k]:esc(T[k])):m);
+  return out.replace(/\*(.+?)\*/g,'<em>$1</em>'); }
+function plain(str){ return fill(str).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim(); }
+function toast(m,ms=2600){const d=document.createElement('div');d.className='toast';d.innerHTML=m;document.body.appendChild(d);setTimeout(()=>d.remove(),ms);}
+function burst(x,y){const em=['⭐','🎉','✨','💜','🌟'];for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst';s.textContent=em[i%5];s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',(Math.random()*240-120)+'px');s.style.setProperty('--dy',(Math.random()*-200-40)+'px');document.body.appendChild(s);setTimeout(()=>s.remove(),1000);}}
+function setProgress(f){$('#progress div').style.width=Math.round(f*100)+'%';}
+function updatePills(){$('#stars').textContent='⭐ '+S.stars;$('#hintsPill').textContent='💡 '+S.hintsUsed;}
+function fmt(sec){const a=Math.abs(sec);return Math.floor(a/60)+':'+String(a%60).padStart(2,'0');}
+function elapsed(){ if(!S.started) return 0; return Math.round(((S.finished||Date.now())-S.started)/1000); }
+function tick(){const left=TOTAL_SECONDS-elapsed(),el=$('#timer');
+  if(left>=0){el.textContent='⏱️ '+fmt(left);el.className='pill'+(left<=120?' low':'');}
+  else{el.textContent='⏱️ +'+fmt(left)+' extra';el.className='pill over'; if(!timeUpShown){timeUpShown=true;toast('⏰ 10 minutes are up! Finish the bit you\u2019re on, then head to the end. No rush! 😊',4500);}}}
+function startTimer(){ if(S.started) return; S.started=Date.now(); tick(); timerHandle=setInterval(tick,1000); }
+function stopTimer(){ if(!S.finished) S.finished=Date.now(); clearInterval(timerHandle); tick(); }
+window.addEventListener('beforeunload',e=>{ if(S.started&&!S.finished){e.preventDefault();e.returnValue='';}});
+function block(p){ const s=fill(p.replace(/^!/,'')); return /^\s*</.test(s)?s:`<p class="${p.startsWith('!')?'short':''}">${s}</p>`; }
+function storySoFar(upTo){ let h=''; for(let i=0;i<PARTS.length&&i<upTo;i++){ h+=(PARTS[i].paras||[]).map(block).join(''); if(PARTS[i].choice&&S.choices[i]!=null) h+=`<div class="branch">${fill(PARTS[i].choice.opts[S.choices[i]].text)}</div>`; } if(upTo>=PARTS.length&&CONFIG.reference) h+=`<div class="box">${fill(CONFIG.reference)}</div>`; return h; }
+function rereadDetails(upTo,label){ const h=storySoFar(upTo); return h?`<details style="margin:6px 0 10px"><summary class="muted">📜 ${label||'Re-read'}</summary><div class="reread-panel story">${h}</div></details>`:''; }
+
+/* ---- intro ---- */
+function renderIntro(){ setProgress(0);
+  app.innerHTML=`<div class="card"><span class="tag">${CONFIG.icon} ${esc(CONFIG.subject)} · Quest #${CONFIG.num}</span>
+  <h1>${fill(CONFIG.introHeading)}</h1><p>${fill(CONFIG.introText)}</p>
+  <table class="plan">${CONFIG.plan.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>
+  <p class="muted">⭐ Each right answer earns stars. 💡 Stuck? Press the hint button. Hints are totally allowed (they just mean a slightly smaller score for that question). ⏱️ The timer is a guide, not a race.</p>
+  <label class="q" for="student">Your name</label><input type="text" id="student" value="${esc(S.student)}" maxlength="30">
+  <button class="btn alt" id="goBtn" style="margin-top:16px">🚀 Start my 10-minute quest!</button></div>`;
+  $('#goBtn').onclick=()=>{ S.student=$('#student').value.trim()||'Alexa'; startTimer(); (CONFIG.setup&&CONFIG.setup.length)?renderSetup():startParts(); };
+}
+/* ---- setup ---- */
+function renderSetup(){ setProgress(.05);
+  let h=`<div class="card"><span class="tag">🎨 Step 1 · ${CONFIG.setupTag||'Make it yours'}</span><h2>${fill(CONFIG.setupHeading||'Make it yours, {student}!')}</h2>`;
+  CONFIG.setup.forEach((it,n)=>{ const num=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'][n]||'▶️';
+    h+=`<label class="q">${num} ${it.label}</label>`;
+    if(it.type==='name'||it.type==='text'){ h+=`<input type="text" data-in="${it.id}" placeholder="${esc(it.placeholder||'Type here...')}" maxlength="${it.max||30}" value="${esc(S.setup[it.id]||'')}">`;
+      if(it.ideas) h+=`<div class="chips">${it.ideas.map(x=>`<button class="chip" data-idea="${it.id}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`; }
+    else if(it.type==='pron'){ const v=S.setup[it.id]||'she'; S.setup[it.id]=v; h+=`<div class="chips"><button class="chip ${v==='she'?'sel':''}" data-pron="${it.id}" data-v="she">👧 girl (she/her)</button><button class="chip ${v==='he'?'sel':''}" data-pron="${it.id}" data-v="he">👦 boy (he/him)</button></div>`; }
+    else if(it.type==='cards'){ h+=`<div class="grid">${it.options.map(o=>`<button class="opt ${S.setup[it.id]===o.key?'sel':''}" data-card="${it.id}" data-v="${o.key}"><span class="big">${o.icon}</span>${esc(o.label)}</button>`).join('')}${it.custom?`<button class="opt ${S.setup[it.id]==='custom'?'sel':''}" data-card="${it.id}" data-v="custom"><span class="big">✏️</span>${esc(it.custom)}</button>`:''}</div>`;
+      if(it.custom) h+=`<input type="text" data-cust="${it.id}" placeholder="${esc(it.customPlaceholder||'Type your idea...')}" maxlength="30" value="${esc(S.custom[it.id]||'')}" style="margin-top:8px;display:${S.setup[it.id]==='custom'?'block':'none'}">`; }
+  });
+  h+=`<div><button class="btn alt" id="toParts" style="margin-top:18px">${CONFIG.setupGo||'▶️ Let\u2019s go!'}</button></div><p class="muted" id="setupMsg"></p></div>`;
+  app.innerHTML=h;
+  const keep=()=>{ app.querySelectorAll('[data-in]').forEach(i=>S.setup[i.dataset.in]=i.value); app.querySelectorAll('[data-cust]').forEach(i=>S.custom[i.dataset.cust]=i.value); };
+  app.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{ app.querySelector(`[data-in="${b.dataset.idea}"]`).value=b.dataset.v; keep(); });
+  app.querySelectorAll('[data-pron]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.pron]=b.dataset.v; renderSetup(); });
+  app.querySelectorAll('[data-card]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.card]=b.dataset.v; renderSetup(); if(b.dataset.v==='custom'){ const c=app.querySelector(`[data-cust="${b.dataset.card}"]`); c&&c.focus(); } });
+  $('#toParts').onclick=()=>{ keep(); const miss=[];
+    CONFIG.setup.forEach(it=>{ if((it.type==='name'||it.type==='text')&&!it.optional&&!(S.setup[it.id]||'').trim()) miss.push(it.short||'your answer');
+      if(it.type==='cards'&&(!S.setup[it.id]||(S.setup[it.id]==='custom'&&!(S.custom[it.id]||'').trim()))) miss.push(it.short||'a choice'); });
+    if(miss.length){ $('#setupMsg').innerHTML='👀 Don\u2019t forget '+miss.join(', ')+'!'; return; }
+    CONFIG.setup.forEach(it=>{ if(S.setup[it.id]&&typeof S.setup[it.id]==='string') S.setup[it.id]=S.setup[it.id].trim().replace(/\s+/g,' '); if(S.custom[it.id]) S.custom[it.id]=S.custom[it.id].trim(); });
+    startParts(); };
+}
+/* ---- story / scenario parts ---- */
+function startParts(){ S.step=0; PARTS.length?renderPart():startQuestions(); }
+function renderPart(){ const i=S.step, P=PARTS[i]; setProgress(.1+i*(.35/Math.max(1,PARTS.length)));
+  const title= i===0&&CONFIG.storyTitle?`<h1>${fill(CONFIG.storyTitle)}</h1>`:(P.title?`<h2>${fill(P.title)}</h2>`:'');
+  app.innerHTML=`<div class="card story"><span class="tag">${CONFIG.partTag||'📜 Story'} · Part ${i+1} of ${PARTS.length}</span>${title}${i>0?rereadDetails(i,'Re-read so far'):''}
+    ${(P.paras||[]).map(block).join('')}<div id="branchOut"></div>
+    ${P.choice?`<div class="choice-box" id="choiceBox"><h3>🤔 ${fill(P.choice.q)}</h3><div class="choices">${P.choice.opts.map((o,k)=>`<button class="opt" data-choice="${k}"><span class="big">${o.icon}</span><span>${fill(o.label)}</span></button>`).join('')}</div></div>`:`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`}
+  </div>`;
+  window.scrollTo(0,0);
+  const next=()=>{ if(i<PARTS.length-1){S.step++;renderPart();} else startQuestions(); };
+  if(!P.choice){ $('#nextPart').onclick=next; return; }
+  app.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.choice; S.choices[i]=k;
+    app.querySelectorAll('[data-choice]').forEach(x=>{x.disabled=true;x.classList.toggle('sel',x===b);});
+    const out=$('#branchOut'); out.innerHTML=`<div class="branch">${fill(P.choice.opts[k].text)}</div>`+(P.after?(P.after.map(block).join('')):'')+`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`;
+    $('#choiceBox').after(out); $('#nextPart').onclick=next; $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- MCQs ---- */
+function startQuestions(){ S.qIndex=0; renderQuestion(); }
+function renderQuestion(){ const qi=S.qIndex,Q=QS[qi]; setProgress(.46+qi*(.4/QS.length));
+  const a=S.answers[qi]||(S.answers[qi]={hint:false,choice:null});
+  app.innerHTML=`<div class="card"><span class="tag">${Q.icon||'❓'} Question ${qi+1} of ${QS.length} · ${esc(Q.skill)}</span>
+    ${Q.context?`<div class="ctx">${fill(Q.context)}</div>`:''}<h2>${fill(Q.q)}</h2>
+    <div class="answers">${Q.opts.map((o,k)=>`<button class="ans" data-ans="${k}"><b class="letter">${'ABCD'[k]}</b><span>${fill(o.t)}</span></button>`).join('')}</div>
+    <div id="hintArea">${a.hint?`<div class="hintbox">💡 ${fill(Q.hint)}</div>`:''}</div><div id="fb"></div>
+    <div><button class="btn ghost" id="hintBtn" ${a.hint?'disabled':''}>💡 ${a.hint?'Hint used':'Show a hint'}</button>${(PARTS.length||CONFIG.reference)?'<button class="btn ghost" id="rereadBtn">📜 Re-read</button>':''}</div><div id="rereadPanel"></div></div>`;
+  window.scrollTo(0,0);
+  const rb=$('#rereadBtn'); if(rb) rb.onclick=()=>{const p=$('#rereadPanel'); p.innerHTML=p.innerHTML?'':`<div class="reread-panel story">${storySoFar(PARTS.length)}</div>`;};
+  $('#hintBtn').onclick=()=>{ if(a.hint||a.choice!=null) return; a.hint=true; S.hintsUsed++; updatePills(); $('#hintArea').innerHTML=`<div class="hintbox">💡 ${fill(Q.hint)}</div>`; $('#hintBtn').disabled=true; $('#hintBtn').textContent='💡 Hint used'; };
+  app.querySelectorAll('[data-ans]').forEach(b=>b.onclick=ev=>{ if(a.choice!=null) return; const k=+b.dataset.ans,o=Q.opts[k]; a.choice=k; a.correct=!!o.ok; a.points=o.ok?(a.hint?1:2):0; S.stars+=a.points; updatePills();
+    app.querySelectorAll('[data-ans]').forEach((x,j)=>{x.disabled=true; if(Q.opts[j].ok) x.classList.add('right');}); if(!o.ok) b.classList.add('wrong'); $('#hintBtn').disabled=true;
+    const right=Q.opts.find(x=>x.ok);
+    $('#fb').innerHTML=`<div class="feedback ${o.ok?'good':'bad'}">${o.ok?(a.hint?'✅ Correct, with a hint! +1 ⭐':'🎉 Correct! +2 ⭐'):'❌ Not this time, but now you know!'}<br>${fill(o.fb)}${o.ok?'':`<br><b>The best answer:</b> ${fill(right.t)}<br>${fill(right.fb)}`}</div>
+      <button class="btn alt" id="nextQ">${qi<QS.length-1?'➡️ Next question':(WRITTEN.length?'📝 On to the last part!':'🏁 See my results')}</button>`;
+    if(o.ok) burst(ev.clientX||200,ev.clientY||300);
+    $('#nextQ').onclick=()=>{ if(qi<QS.length-1){S.qIndex++;renderQuestion();} else { S.wIndex=0; WRITTEN.length?renderWritten():finishScreen(); } };
+    $('#nextQ').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- written / creative / ratings ---- */
+function countSentences(t){ t=t.trim(); if(!t) return 0; return (t.match(/[^.!?。！？]+[.!?。！？]+/g)||[]).filter(s=>s.trim().length>1).length + (/[^.!?。！？\s]\s*$/.test(t)?1:0); }
+function countWords(t){ t=t.trim(); if(!t) return 0; const cjk=(t.match(/[\u3400-\u9fff]/g)||[]).length; const lat=t.replace(/[\u3400-\u9fff]/g,' ').trim(); return cjk+(lat?lat.split(/\s+/).length:0); }
+function clues(W,t){ if(!W.clueWords) return []; const low=' '+t.toLowerCase()+' '; return [...new Set(fill(W.clueWords.join('|')).toLowerCase().split('|').filter(w=>w&&low.includes(w)))]; }
+function renderWritten(){ const wi=S.wIndex, W=WRITTEN[wi], last=wi===WRITTEN.length-1; setProgress(.88+wi*.04);
+  let h=`<div class="card"><span class="tag">${W.tag||'📝 Your turn'}</span><h2>${fill(W.title)}</h2>${W.context?`<div class="ctx">${fill(W.context)}</div>`:''}<p>${fill(W.prompt)}</p>`;
+  if(W.type==='ratings'){ const R=S.ratings[W.id]||(S.ratings[W.id]={});
+    h+=W.items.map(it=>`<div class="rate"><span class="lbl">${fill(it.label)}</span><span class="chips">${[1,2,3,4].map(v=>`<button class="chip ${R[it.key]==v?'sel':''}" data-rate="${it.key}" data-v="${v}">${(W.scale||['🌱 1','🌿 2','🌳 3','🌟 4'])[v-1]}</button>`).join('')}</span></div>`).join('');
+  } else if(W.type==='pick'){ h+=`<div class="grid">${W.options.map(o=>`<button class="opt ${S.picks[W.id]===o.key?'sel':''}" data-pick="${o.key}"><span class="big">${o.icon}</span>${fill(o.label)}</button>`).join('')}</div>`;
+    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea>`;
+  } else {
+    if(W.starters) h+=`<p class="muted">Tap a starter to add it:</p><div class="chips">${W.starters.map(s=>`<button class="chip" data-start="${esc(fill(s))}">${fill(s)}</button>`).join('')}</div>`;
+    h+=`<textarea id="wtext" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
+    if(W.sketch) h+=`<details style="margin-top:10px" ${W.sketchOpen?'open':''}><summary><b>🖍️ Sketch pad (optional)</b> · draw with your finger or mouse</summary><canvas class="sketch" id="sk" width="700" height="260"></canvas>
+      <div class="chips">${['#2d2a4a','#e2483d','#ff9f1c','#ffd23f','#22a06b','#4cc9f0','#7b5cff','#ff5d8f'].map(c=>`<button class="chip" data-col="${c}" style="background:${c};width:34px;height:34px;padding:0"></button>`).join('')}<button class="chip" id="skClear">🧽 Clear</button><a class="chip" id="skSave" download="sketch-session-${CONFIG.num}.png" href="#">💾 Save picture</a></div></details>`;
+  }
+  if(PARTS.length||CONFIG.reference) h+=rereadDetails(PARTS.length,'Re-read');
+  if(last) h+=`<label class="q">🌡️ How did today's quest feel?</label><div class="conf">${[['1','🌱','Tricky!'],['2','🌿','OK-ish'],['3','🌳','Pretty good'],['4','🌟','Easy-peasy!']].map(c=>`<button class="opt ${S.confidence===c[0]?'sel':''}" data-conf="${c[0]}"><span class="big">${c[1]}</span>${c[0]} · ${c[2]}</button>`).join('')}</div>`;
+  h+=`<button class="btn alt" id="wNext" style="margin-top:16px">${last?'🏁 Finish &amp; see my results':'➡️ Next'}</button><p class="muted" id="wMsg"></p></div>`;
+  app.innerHTML=h; window.scrollTo(0,0);
+  const ta=$('#wtext');
+  const upd=()=>{ if(!ta) return; S.written[W.id]=ta.value; const st=$('#wstats'); if(!st) return; const c=clues(W,ta.value), n=countSentences(ta.value);
+    st.innerHTML=`<span>✍️ ${countWords(ta.value)} words</span><span>📏 ${n} sentence${n===1?'':'s'}${W.sentences?(n>=W.sentences[0]?' ✅':` (aim for ${W.sentences[0]}${W.sentences[1]!==W.sentences[0]?'–'+W.sentences[1]:''})`):''}</span>${W.clueWords?`<span>${W.clueLabel||'🔍 Key words'}: ${c.length?esc(c.join(', ')):'none yet'}</span>`:''}`; };
+  if(ta){ ta.oninput=upd; upd(); }
+  app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{ const s=b.dataset.start.replace(/\.\.\.$|…$/,' '); ta.value=ta.value.trim()?ta.value.replace(/\s*$/,'')+' '+s:s; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); upd(); });
+  app.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{ S.ratings[W.id][b.dataset.rate]=+b.dataset.v; app.querySelectorAll(`[data-rate="${b.dataset.rate}"]`).forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ S.picks[W.id]=b.dataset.pick; app.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-conf]').forEach(b=>b.onclick=()=>{ S.confidence=b.dataset.conf; app.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  const cv=$('#sk'); if(cv){ const ctx=cv.getContext('2d'); let col='#2d2a4a',down=false; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round';
+    const pos=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+    cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y);ctx.strokeStyle=col;S.sketched[W.id]=true;};
+    cv.onpointermove=e=>{if(!down)return;const [x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke();}; cv.onpointerup=()=>down=false;
+    app.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>col=b.dataset.col); $('#skClear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);S.sketched[W.id]=false;};
+    $('#skSave').onclick=()=>{ $('#skSave').href=cv.toDataURL('image/png'); }; }
+  $('#wNext').onclick=()=>{ if(ta) S.written[W.id]=ta.value;
+    if(W.type==='ratings'){ const miss=W.items.filter(it=>!S.ratings[W.id][it.key]); if(miss.length){ $('#wMsg').textContent='🌡️ Rate every line first ('+miss.length+' to go).'; return; } }
+    else if(W.type==='pick'){ if(!S.picks[W.id]){ $('#wMsg').textContent='👆 Pick one first!'; return; } if(W.followUp&&countWords(ta.value)<(W.minWords||3)){ $('#wMsg').textContent='✍️ Add a few words to explain.'; return; } }
+    else if(countWords(ta.value)<(W.minWords||5)){ $('#wMsg').textContent='✍️ Write a little more first (at least '+(W.minWords||5)+' words)!'; return; }
+    if(last&&!S.confidence){ $('#wMsg').textContent='🌡️ Pick how the quest felt (1–4).'; return; }
+    if(last) finishScreen(); else { S.wIndex++; renderWritten(); } };
+}
+/* ---- scoring & results ---- */
+function skillScores(){ const sk={}; QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const s=sk[Q.skill]=sk[Q.skill]||{pts:0,hints:0,correct:0,n:0,icon:Q.icon,crit:Q.crit};
+  s.pts+=a.points||0; s.hints+=a.hint?1:0; s.correct+=a.correct?1:0; s.n++; });
+  Object.values(sk).forEach(v=>v.level=Math.max(1,Math.min(4,Math.round(v.pts/(2*v.n)*4)))); return sk; }
+const LEVELS={1:'🌱 Beginning',2:'🌿 Developing',3:'🌳 Secure',4:'🌟 Extending'};
+const lvlWord=l=>LEVELS[l]?LEVELS[l].replace(/^\S+ /,''):'';
+function setupLines(){ const L=[]; (CONFIG.setup||[]).forEach(it=>{ let v;
+  if(it.type==='pron') v=S.setup[it.id]==='he'?'boy (he/him)':'girl (she/her)';
+  else if(it.type==='cards'){ const o=optFor(it); v=o?o.label+(S.setup[it.id]==='custom'?' (own idea)':''):'-'; }
+  else v=(S.setup[it.id]||'').trim()||'-';
+  L.push(`${plain(it.resultLabel||it.label)}: ${v}`); }); return L; }
+function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()), L=[];
+  L.push(`${S.student.toUpperCase()}'S RESULTS · Session ${String(CONFIG.num).padStart(2,'0')} · ${CONFIG.title} (${CONFIG.subject} diagnostic)`);
+  L.push(`Date: ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+  L.push(`Time taken: ${fmt(elapsed())} (target ${fmt(TOTAL_SECONDS)})`);
+  L.push(`Stars: ${S.stars}/${QS.length*2} · Questions correct: ${S.answers.filter(a=>a&&a.correct).length}/${QS.length} · Hints used: ${S.hintsUsed}`);
+  if((CONFIG.setup||[]).length||PARTS.some(p=>p.choice)){ L.push('','--- MY CHOICES ---'); L.push(...setupLines());
+    PARTS.forEach((p,i)=>{ if(p.choice) L.push(`Choice ${i+1}: ${plain(p.choice.q)} -> ${S.choices[i]!=null?plain(p.choice.opts[S.choices[i]].label):'(none)'}`); }); }
+  L.push('','--- QUESTIONS ---');
+  QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const ans=a.choice!=null?`${'ABCD'[a.choice]}. ${plain(Q.opts[a.choice].t)}`:'(not answered)'; const r=Q.opts.findIndex(o=>o.ok);
+    L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[r]}`}`); });
+  L.push('','--- SKILL SCORES (1-4) ---');
+  Object.entries(sk).forEach(([k,v])=>L.push(`${k}${v.crit?' [MYP '+v.crit+']':''}: ${v.level}/4 ${lvlWord(v.level)} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
+  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${W.skillLabel||plain(W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
+  WRITTEN.forEach(W=>{ L.push('',`--- ${plain(W.resultLabel||W.title).toUpperCase()} ---`);
+    if(W.type==='ratings'){ W.items.forEach(it=>L.push(`${plain(it.label)}: ${S.ratings[W.id]&&S.ratings[W.id][it.key]||'-'}/4`)); }
+    else if(W.type==='pick'){ const o=W.options.find(o=>o.key===S.picks[W.id]); L.push(`Picked: ${o?plain(o.label):'-'}`); if(W.followUp) L.push(`${plain(W.followUp)} ${(S.written[W.id]||'').trim()}`); }
+    else { const t=(S.written[W.id]||'').trim(); L.push(t); const c=clues(W,t); L.push(`(${countWords(t)} words, ${countSentences(t)} sentences${W.clueWords?', key words: '+(c.join(', ')||'none'):''}${W.sketch?', sketch drawn: '+(S.sketched[W.id]?'yes (saved separately)':'no'):''})`); } });
+  L.push('',`How the quest felt (1-4): ${S.confidence} ${lvlWord(S.confidence)}`);
+  return L.join('\n'); }
+function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), txt=resultsText();
+  const subj=`Session ${String(CONFIG.num).padStart(2,'0')} results: ${S.student} – ${CONFIG.title}`;
+  let mailBody=txt; if(mailBody.length>1800) mailBody=mailBody.slice(0,1800)+'\n...(cut short - please also paste the full results from "Copy my results")';
+  const mail=`mailto:${EMAIL_TO}?cc=${encodeURIComponent(EMAIL_CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mailBody)}`;
+  app.innerHTML=`<div class="card"><span class="tag">🏆 Quest complete!</span><h1>${fill(CONFIG.finishHeading||'Amazing work, {student}! 🎉')}</h1>
+    <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
+    <h2 style="margin-top:18px">Your skill scores</h2>
+    ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon||''} ${esc(k)}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div><div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div><div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
+    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(W.skillLabel||plain(W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
+    <h2 style="margin-top:18px">📋 Send your results</h2><p>Tap <b>Copy my results</b>, then paste into an email to Mum, or tap <b>Open in email</b>.</p>
+    <button class="btn alt" id="copyBtn">📋 Copy my results</button><a class="btn ghost" id="mailBtn" href="${mail}">✉️ Open in email</a><p class="muted" id="copyMsg"></p>
+    <pre id="resultText">${esc(txt)}</pre><button class="btn ghost" id="again">🔁 Play again (new choices)</button></div>`;
+  window.scrollTo(0,0); burst(innerWidth/2,200);
+  $('#copyBtn').onclick=async()=>{ let ok=false; try{ if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(txt);ok=true;} }catch(e){}
+    if(!ok){ const t=document.createElement('textarea'); t.value=txt; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); try{ok=document.execCommand('copy');}catch(e){} t.remove(); }
+    $('#copyMsg').innerHTML=ok?'✅ Copied! Now paste it into an email or message to Mum.':'⚠️ Couldn\u2019t copy automatically. Press and hold the text below, choose "Select all" and then "Copy".'; };
+  $('#again').onclick=()=>{ if(confirm('Start again? (Copy your results first!)')) location.reload(); };
+}
+/* ---- self-test helper (used by automated checks only) ---- */
+window.__selfTest=function(){ const bad=new Set(), saved=JSON.stringify(S); const setup=CONFIG.setup||[];
+  const combos=[{}]; setup.forEach(it=>{ let vals=[]; if(it.type==='pron') vals=['she','he']; else if(it.type==='cards') vals=it.options.map(o=>o.key).concat(it.custom?['custom']:[]); else vals=['Testname'];
+    const n=[]; combos.forEach(c=>vals.forEach(v=>n.push(Object.assign({},c,{[it.id]:v})))); combos.splice(0,combos.length,...n.slice(0,400)); });
+  const maxC=Math.max(1,...PARTS.map(p=>p.choice?p.choice.opts.length:1));
+  combos.forEach(c=>{ S.setup=c; setup.forEach(it=>{ if(it.type==='cards') S.custom[it.id]='test idea'; });
+    for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
+      let all=[CONFIG.storyTitle,CONFIG.reference,CONFIG.setupHeading,CONFIG.finishHeading]; PARTS.forEach(p=>{ all.push(...(p.paras||[]),...(p.after||[]),p.title); if(p.choice){ all.push(p.choice.q); p.choice.opts.forEach(o=>all.push(o.label,o.text)); } });
+      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
+      all.forEach(s=>{ if(s){ const m=fill(s).match(/\{\w+\}/g); if(m) m.forEach(x=>bad.add(x)); } }); } });
+  Object.assign(S,JSON.parse(saved));
+  const pos=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); const multi=QS.filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length;
+  return {leftover:[...bad], combos:combos.length, positions:pos, badOk:multi}; };
+$('#hdrTitle').textContent=`${CONFIG.icon} ${CONFIG.title} · Session ${String(CONFIG.num).padStart(2,'0')}`;
+document.title=`Session ${CONFIG.num} · ${CONFIG.title}`;
+renderIntro(); updatePills();
+</script>
+</body>
+</html>
