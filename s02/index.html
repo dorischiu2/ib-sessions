@@ -211,7 +211,7 @@ const CONFIG = {
 const EMAIL_TO='Doris.s.chiu@gmail.com', EMAIL_CC='francoisdemange@hotmail.com';
 const TOTAL_SECONDS = CONFIG.seconds || 600;
 const PRONOUNS={she:{sub:'she',obj:'her',pos:'her'},he:{sub:'he',obj:'him',pos:'his'}};
-const QS = CONFIG.questions, PARTS = CONFIG.parts||[], WRITTEN = CONFIG.written||[];
+let QS = CONFIG.questions||[]; const PARTS = CONFIG.parts||[]; const WRITTEN = CONFIG.written||[];
 const S={student:'Alexa',setup:{},custom:{},choices:[],qIndex:0,answers:[],hintsUsed:0,stars:0,written:{},ratings:{},picks:{},sketched:{},confidence:null,started:null,finished:null,step:0,wIndex:0};
 let timerHandle=null,timeUpShown=false;
 const $=s=>document.querySelector(s), app=$('#app');
@@ -302,7 +302,8 @@ function renderPart(){ const i=S.step, P=PARTS[i]; setProgress(.1+i*(.35/Math.ma
     $('#choiceBox').after(out); $('#nextPart').onclick=next; $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'}); });
 }
 /* ---- MCQs ---- */
-function startQuestions(){ S.qIndex=0; renderQuestion(); }
+function getQS(){ if(CONFIG.questionSets){ const k=S.setup[CONFIG.questionSetBy]; return CONFIG.questionSets[k]||Object.values(CONFIG.questionSets)[0]; } return CONFIG.questions; }
+function startQuestions(){ QS=getQS(); S.qIndex=0; renderQuestion(); }
 function renderQuestion(){ const qi=S.qIndex,Q=QS[qi]; setProgress(.46+qi*(.4/QS.length));
   const a=S.answers[qi]||(S.answers[qi]={hint:false,choice:null});
   app.innerHTML=`<div class="card"><span class="tag">${Q.icon||'❓'} Question ${qi+1} of ${QS.length} · ${esc(Q.skill)}</span>
@@ -331,10 +332,10 @@ function renderWritten(){ const wi=S.wIndex, W=WRITTEN[wi], last=wi===WRITTEN.le
   if(W.type==='ratings'){ const R=S.ratings[W.id]||(S.ratings[W.id]={});
     h+=W.items.map(it=>`<div class="rate"><span class="lbl">${fill(it.label)}</span><span class="chips">${[1,2,3,4].map(v=>`<button class="chip ${R[it.key]==v?'sel':''}" data-rate="${it.key}" data-v="${v}">${(W.scale||['🌱 1','🌿 2','🌳 3','🌟 4'])[v-1]}</button>`).join('')}</span></div>`).join('');
   } else if(W.type==='pick'){ h+=`<div class="grid">${W.options.map(o=>`<button class="opt ${S.picks[W.id]===o.key?'sel':''}" data-pick="${o.key}"><span class="big">${o.icon}</span>${fill(o.label)}</button>`).join('')}</div>`;
-    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea>`;
+    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(plain(W.placeholder||'Type here...'))}">${esc(S.written[W.id]||'')}</textarea>`;
   } else {
     if(W.starters) h+=`<p class="muted">Tap a starter to add it:</p><div class="chips">${W.starters.map(s=>`<button class="chip" data-start="${esc(fill(s))}">${fill(s)}</button>`).join('')}</div>`;
-    h+=`<textarea id="wtext" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
+    h+=`<textarea id="wtext" placeholder="${esc(plain(W.placeholder||'Type here...'))}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
     if(W.sketch) h+=`<details style="margin-top:10px" ${W.sketchOpen?'open':''}><summary><b>🖍️ Sketch pad (optional)</b> · draw with your finger or mouse</summary><canvas class="sketch" id="sk" width="700" height="260"></canvas>
       <div class="chips">${['#2d2a4a','#e2483d','#ff9f1c','#ffd23f','#22a06b','#4cc9f0','#7b5cff','#ff5d8f'].map(c=>`<button class="chip" data-col="${c}" style="background:${c};width:34px;height:34px;padding:0"></button>`).join('')}<button class="chip" id="skClear">🧽 Clear</button><a class="chip" id="skSave" download="sketch-session-${CONFIG.num}.png" href="#">💾 Save picture</a></div></details>`;
   }
@@ -386,7 +387,7 @@ function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()
     L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[r]}`}`); });
   L.push('','--- SKILL SCORES (1-4) ---');
   Object.entries(sk).forEach(([k,v])=>L.push(`${k}${v.crit?' [MYP '+v.crit+']':''}: ${v.level}/4 ${lvlWord(v.level)} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
-  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${W.skillLabel||plain(W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
+  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${plain(W.skillLabel||W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
   WRITTEN.forEach(W=>{ L.push('',`--- ${plain(W.resultLabel||W.title).toUpperCase()} ---`);
     if(W.type==='ratings'){ W.items.forEach(it=>L.push(`${plain(it.label)}: ${S.ratings[W.id]&&S.ratings[W.id][it.key]||'-'}/4`)); }
     else if(W.type==='pick'){ const o=W.options.find(o=>o.key===S.picks[W.id]); L.push(`Picked: ${o?plain(o.label):'-'}`); if(W.followUp) L.push(`${plain(W.followUp)} ${(S.written[W.id]||'').trim()}`); }
@@ -401,7 +402,7 @@ function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), tx
     <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
     <h2 style="margin-top:18px">Your skill scores</h2>
     ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon||''} ${esc(k)}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div><div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div><div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
-    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(W.skillLabel||plain(W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
+    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(plain(W.skillLabel||W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
     <h2 style="margin-top:18px">📋 Send your results</h2><p>Tap <b>Copy my results</b>, then paste into an email to Mum, or tap <b>Open in email</b>.</p>
     <button class="btn alt" id="copyBtn">📋 Copy my results</button><a class="btn ghost" id="mailBtn" href="${mail}">✉️ Open in email</a><p class="muted" id="copyMsg"></p>
     <pre id="resultText">${esc(txt)}</pre><button class="btn ghost" id="again">🔁 Play again (new choices)</button></div>`;
@@ -417,12 +418,13 @@ window.__selfTest=function(){ const bad=new Set(), saved=JSON.stringify(S); cons
     const n=[]; combos.forEach(c=>vals.forEach(v=>n.push(Object.assign({},c,{[it.id]:v})))); combos.splice(0,combos.length,...n.slice(0,400)); });
   const maxC=Math.max(1,...PARTS.map(p=>p.choice?p.choice.opts.length:1));
   combos.forEach(c=>{ S.setup=c; setup.forEach(it=>{ if(it.type==='cards') S.custom[it.id]='test idea'; });
-    for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
+    QS=getQS(); for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
       let all=[CONFIG.storyTitle,CONFIG.reference,CONFIG.setupHeading,CONFIG.finishHeading]; PARTS.forEach(p=>{ all.push(...(p.paras||[]),...(p.after||[]),p.title); if(p.choice){ all.push(p.choice.q); p.choice.opts.forEach(o=>all.push(o.label,o.text)); } });
-      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
+      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.skillLabel,W.resultLabel,W.placeholder,W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
       all.forEach(s=>{ if(s){ const m=fill(s).match(/\{\w+\}/g); if(m) m.forEach(x=>bad.add(x)); } }); } });
   Object.assign(S,JSON.parse(saved));
-  const pos=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); const multi=QS.filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length;
+  const sets=CONFIG.questionSets?Object.values(CONFIG.questionSets):[CONFIG.questions]; const pos=sets.map(qs=>qs.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join('')).join('/'); const multi=[].concat(...sets).filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length; QS=getQS();
+  const _unused=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); 
   return {leftover:[...bad], combos:combos.length, positions:pos, badOk:multi}; };
 $('#hdrTitle').textContent=`${CONFIG.icon} ${CONFIG.title} · Session ${String(CONFIG.num).padStart(2,'0')}`;
 document.title=`Session ${CONFIG.num} · ${CONFIG.title}`;
