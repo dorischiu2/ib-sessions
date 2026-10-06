@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 3 · The Great Ice Melt Mystery</title>
+<style>
+  :root{--bg1:#ffecd2;--bg2:#fcb69f;--ink:#2d2a4a;--card:#fff;--pri:#7b5cff;--pri2:#5a3de0;--ok:#22a06b;--okbg:#e3fcef;--bad:#e2483d;--badbg:#ffebe9;--warn:#ff9f1c;--sky:#4cc9f0;--pink:#ff5d8f;--yellow:#ffd23f}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Trebuchet MS","Segoe UI","Noto Sans",system-ui,-apple-system,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;font-size:18px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(45,42,74,.95);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  header .title{font-weight:bold;flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+  #timer.low{background:var(--warn);color:#2d2a4a} #timer.over{background:var(--pink)}
+  #progress{height:6px;background:rgba(255,255,255,.4)} #progress div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--pri),var(--pink));transition:width .5s}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .card{background:var(--card);border-radius:22px;padding:20px 20px 22px;margin:14px 0;box-shadow:0 8px 24px rgba(90,61,224,.15);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.97) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-size:28px;margin:4px 0 8px;color:var(--pri2)} h2{font-size:22px;margin:4px 0 10px;color:var(--pri2)} h3{margin:8px 0}
+  .muted{color:#6b6790;font-size:15px}
+  .tag{display:inline-block;font-size:13px;font-weight:bold;padding:2px 10px;border-radius:999px;background:#efeaff;color:var(--pri2);margin-bottom:6px}
+  label.q{display:block;font-weight:bold;margin:16px 0 6px}
+  input[type=text],textarea{width:100%;font:inherit;padding:10px 12px;border:3px solid #ddd6ff;border-radius:14px;outline:none;background:#fbfaff}
+  input[type=text]:focus,textarea:focus{border-color:var(--pri)} textarea{min-height:140px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{border:2px solid #ddd6ff;background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+  .chip:hover,.chip.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .opt{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:18px;padding:12px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+  .opt .big{font-size:32px;display:block} .opt:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .opt.sel{border-color:var(--pri);background:#f3efff;box-shadow:0 0 0 3px rgba(123,92,255,.25)}
+  .btn{display:inline-block;border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:bold;cursor:pointer;background:linear-gradient(180deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 4px 0 #3f2aa8;margin:6px 6px 0 0;text-decoration:none}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:linear-gradient(180deg,#ffe066,#ffc300);color:var(--ink);box-shadow:0 4px 0 #c99700}
+  .btn.ghost{background:#fff;color:var(--pri2);border:2px solid #ddd6ff;box-shadow:none}
+  .story p{margin:0 0 12px;font-size:19px} .story p.short{font-weight:bold;font-size:21px;color:var(--pink)}
+  .branch{background:#fff8e1;border-left:5px solid var(--yellow);padding:8px 12px;border-radius:8px;margin:0 0 12px}
+  .story em{color:#1d5fa8}
+  .box{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:10px 0;font-size:17px}
+  .box table,.ctx table{border-collapse:collapse;width:100%;font-size:16px;margin:6px 0}
+  .box td,.box th,.ctx td,.ctx th{border:1px solid #cfd8e3;padding:5px 8px;text-align:left}
+  .box th,.ctx th{background:#eaf4ff}
+  .ctx{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:8px 0 4px;font-size:17px}
+  .choice-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#e0f7ff,#f3efff)}
+  .choice-box h3{margin:0 0 10px;font-size:19px} .choices{display:grid;gap:10px}
+  .choices .opt{text-align:left;display:flex;gap:10px;align-items:center} .choices .opt .big{font-size:26px;display:inline}
+  .answers{display:grid;gap:10px;margin-top:12px}
+  .ans{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;font:inherit;text-align:left;cursor:pointer;display:flex;gap:10px}
+  .ans b.letter{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:#efeaff;color:var(--pri2)}
+  .ans:hover:not(:disabled){border-color:var(--sky)} .ans.right{border-color:var(--ok);background:var(--okbg)} .ans.wrong{border-color:var(--bad);background:var(--badbg)}
+  .ans:disabled,.opt:disabled{cursor:default;color:var(--ink);opacity:1} .choices .opt:disabled:not(.sel){opacity:.55}
+  .feedback{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:17px;animation:pop .3s}
+  .feedback.good{background:var(--okbg);border:2px solid var(--ok)} .feedback.bad{background:var(--badbg);border:2px solid var(--bad)}
+  .hintbox{margin-top:12px;padding:10px 14px;border-radius:14px;background:#fff8e1;border:2px dashed var(--warn);font-size:16px}
+  .reread-panel{margin-top:10px;max-height:320px;overflow:auto;border:2px solid #ece8ff;border-radius:14px;padding:12px;background:#fdfcff}
+  .reread-panel p{font-size:16px;margin:0 0 8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px} .stats span{background:#efeaff;border-radius:999px;padding:4px 12px;font-size:15px}
+  .skill{margin:10px 0} .skill .row{display:flex;justify-content:space-between;gap:8px;font-weight:bold;flex-wrap:wrap}
+  .bar{height:16px;border-radius:999px;background:#eee;overflow:hidden;margin-top:4px} .bar div{height:100%;border-radius:999px}
+  .lvl1{background:#ff8fa3}.lvl2{background:#ffc300}.lvl3{background:#4cc9f0}.lvl4{background:#22a06b}
+  pre#resultText{white-space:pre-wrap;word-break:break-word;background:#fbfaff;border:2px solid #ece8ff;border-radius:14px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;z-index:50;font-weight:bold;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:pop .3s;max-width:90%;text-align:center}
+  .burst{position:fixed;pointer-events:none;font-size:28px;z-index:60;animation:fly 1s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+  .conf{display:flex;gap:8px;flex-wrap:wrap} .conf .opt{flex:1;min-width:120px}
+  .plan{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px} .plan td{padding:6px 8px;border-bottom:1px dashed #ddd}
+  .rate{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #e5e0ff;flex-wrap:wrap}
+  .rate .lbl{flex:1;min-width:160px} .rate .chips{margin-top:0}
+  canvas.sketch{width:100%;height:260px;border:3px dashed #ddd6ff;border-radius:14px;background:#fff;touch-action:none;display:block;margin-top:8px}
+  details summary{cursor:pointer}
+  @media (max-width:520px){body{font-size:17px} h1{font-size:24px} .story p{font-size:18px} header .title{font-size:13px} header{gap:6px;padding:8px 10px} .pill{font-size:14px;padding:3px 9px}}
+</style>
+</head>
+<body>
+<header><div class="title" id="hdrTitle"></div><div class="pill" id="stars">⭐ 0</div><div class="pill" id="hintsPill">💡 0</div><div class="pill" id="timer">⏱️ 10:00</div></header>
+<div id="progress"><div></div></div>
+<main id="app"></main>
+<script>
+/* ===== SESSION CONTENT (original, written for Alexa) ===== */
+const CONFIG = {
+  num:3, subject:'Sciences', icon:'🔬', title:'The Great Ice Melt Mystery',
+  introHeading:'Hi {student}! Ready to be a scientist? 🧊🔬',
+  introText:'Some ice cubes melt faster than others. But why? You and your lab partner will run an experiment, make a prediction, read the results and plan your own twist experiment. Real scientists think exactly like this!',
+  plan:[['🎨 Set up your lab','~1 min'],['🧊 Run the experiment','~2 min'],['❓ 8 science questions','~4 min'],['📝 Plan your twist experiment','~2½ min']],
+  setupHeading:'Set up your lab, {student}!',
+  setup:[
+    {id:'Name', type:'name', label:'Name your lab partner', ideas:['Dr. Lee','Priya','Ollie','Jade','Professor Fox'], fallback:'Priya', short:'a partner name', resultLabel:'Lab partner'},
+    {id:'pron', type:'pron', label:'Is your lab partner a...'},
+    {id:'lab', type:'cards', label:'Where is your lab?', short:'a lab', resultLabel:'Lab',
+     options:[
+      {key:'school', icon:'🏫', label:'School science lab', vars:{labPlace:'the school science lab'}},
+      {key:'kitchen', icon:'🍳', label:'Home kitchen', vars:{labPlace:'the kitchen at home'}},
+      {key:'polar', icon:'🐧', label:'Antarctic station', vars:{labPlace:'a cosy research station in Antarctica'}},
+      {key:'moon', icon:'🌙', label:'Moon base', vars:{labPlace:'the science dome of a Moon base'}}]},
+    {id:'sub', type:'cards', label:'Pick a secret ingredient for your twist experiment later', short:'an ingredient', resultLabel:'Twist ingredient', custom:'My own idea', customPlaceholder:'e.g. pepper, flour...',
+     options:[
+      {key:'salt', icon:'🧂', label:'Salt', vars:{substance:'salt'}},
+      {key:'sugar', icon:'🍬', label:'Sugar', vars:{substance:'sugar'}},
+      {key:'sand', icon:'🏖️', label:'Sand', vars:{substance:'sand'}}],
+     customVars:t=>({substance:t.toLowerCase()})}
+  ],
+  setupGo:'🧪 Into the lab!', partTag:'🧪 Experiment',
+  storyTitle:'The Great Ice Melt Mystery',
+  parts:[
+    {paras:['Welcome to {labPlace}! The room is a steady <b>24°C</b>.',
+      '{Name} puts three <b>identical 10 g ice cubes</b> on three different surfaces at exactly the same moment:',
+      '<div class="box">🥄 a <b>metal tray</b> &nbsp; 🥡 a <b>plastic plate</b> &nbsp; 🪵 a <b>wooden board</b></div>',
+      '"Here\u2019s a weird fact," says {Name}. "If you touch them, the metal tray feels the <i>coldest</i>. So which ice cube do you think melts first?"'],
+     choice:{q:'Make your prediction! Which ice cube will melt FIRST?', opts:[
+      {icon:'🥄', label:'Metal tray', text:'You predict the <b>metal tray</b>. {Name} writes it in the lab book: <i>Prediction: metal first.</i>'},
+      {icon:'🥡', label:'Plastic plate', text:'You predict the <b>plastic plate</b>. {Name} writes it in the lab book: <i>Prediction: plastic first.</i>'},
+      {icon:'🪵', label:'Wooden board', text:'You predict the <b>wooden board</b>. {Name} writes it in the lab book: <i>Prediction: wood first.</i>'}]}},
+    {paras:['You wait, timing every cube with a stopwatch. ⏱️ Here are the results:',
+      '<div class="box"><table><tr><th>Surface</th><th>Time to melt completely</th></tr><tr><td>🥄 Metal tray</td><td><b>12 minutes</b></td></tr><tr><td>🥡 Plastic plate</td><td><b>25 minutes</b></td></tr><tr><td>🪵 Wooden board</td><td><b>31 minutes</b></td></tr></table><span class="muted">All cubes: 10 g · room 24°C · tested once each</span></div>',
+      'You predicted: <b>{choice1}</b>. {Name} taps the table. "So the surface that <i>felt</i> coldest melted the ice fastest! Let\u2019s work out why."']}
+  ],
+  reference:'<b>Results</b><table><tr><th>Surface</th><th>Time to melt</th></tr><tr><td>Metal tray</td><td>12 min</td></tr><tr><td>Plastic plate</td><td>25 min</td></tr><tr><td>Wooden board</td><td>31 min</td></tr></table>10 g ice cubes, room at 24°C, each tested once.',
+  questions:[
+    {skill:'Scientific knowledge', crit:'A', icon:'🧠', q:'Why did the ice on the <b>metal tray</b> melt fastest?',
+     opts:[{t:'Metal is naturally hot inside', fb:'Metal isn\u2019t hot. It was at room temperature (24°C) like everything else.'},
+           {t:'Metal is a good <b>conductor</b>, so heat from the room flows through it into the ice quickly', ok:true, fb:'Excellent! Metal conducts heat well. It also <i>feels</i> cold because it pulls heat out of your fingers quickly, the same reason it pushes heat into the ice fast.'},
+           {t:'Metal makes ice colder', fb:'If the ice got colder it would melt more <i>slowly</i>. Think about heat moving.'},
+           {t:'The metal tray was bigger', fb:'Size isn\u2019t mentioned, and the experiment is about the <b>material</b>. What can heat move through easily?'}],
+     hint:'Think about heat moving: which material lets heat travel through it most easily? (Pots and pans are often made of it!)', gap:'A or C = misconception that "feels cold" means "is colder".'},
+    {skill:'Scientific knowledge', crit:'A', icon:'🧠', q:'Ice melting into water is an example of...',
+     opts:[{t:'a chemical reaction', fb:'No new substance is made. Water is still water, just in a different state.'},
+           {t:'evaporation', fb:'Evaporation is liquid → gas. Melting is solid → liquid.'},
+           {t:'condensation', fb:'Condensation is gas → liquid (like drops on a cold can).'},
+           {t:'a change of state from solid to liquid', ok:true, fb:'Correct! Melting is a physical change of state, and it can be reversed by freezing.'}],
+     hint:'Ice is a solid. Water is a liquid. Is a new substance made, or does the state change?'},
+    {skill:'Variables & fair testing', crit:'B', icon:'⚖️', q:'What is the <b>independent variable</b>, the one thing you deliberately change?',
+     opts:[{t:'The time taken to melt', fb:'That\u2019s what you <b>measure</b>: the <i>dependent</i> variable.'},
+           {t:'The size of the ice cubes', fb:'That\u2019s kept the same: a <i>control</i> variable.'},
+           {t:'The type of surface', ok:true, fb:'Yes! You change the surface (metal, plastic, wood) to see what happens.'},
+           {t:'The room temperature', fb:'The room stayed at 24°C, so that\u2019s a <i>control</i> variable.'}],
+     hint:'Independent = what YOU change. Dependent = what you MEASURE. Controlled = what you keep the SAME.'},
+    {skill:'Variables & fair testing', crit:'B', icon:'⚖️', q:'To make this a <b>fair test</b>, which of these must stay the same for every cube?',
+     opts:[{t:'The size (mass) of the ice cubes', ok:true, fb:'Exactly! A bigger cube would take longer whatever the surface, so all cubes were 10 g.'},
+           {t:'The type of surface', fb:'That\u2019s the one thing we <i>want</i> to change.'},
+           {t:'The time to melt', fb:'That\u2019s the result we\u2019re measuring, so we can\u2019t keep it the same!'},
+           {t:'The prediction', fb:'Predictions don\u2019t affect fairness. Think about the ice cubes themselves.'}],
+     hint:'If one ice cube were huge and another tiny, would it be fair? What else should match?'},
+    {skill:'Predicting & hypothesising', crit:'B', icon:'🔮', q:'Which is the <b>best scientific hypothesis</b> for this experiment?',
+     opts:[{t:'Ice will melt.', fb:'True, but it doesn\u2019t say what affects <i>how fast</i>, or why.'},
+           {t:'Metal is the best.', fb:'"Best" at what? A hypothesis needs a clear link between what you change and what you measure.'},
+           {t:'I like the wooden board.', fb:'That\u2019s an opinion, not a testable prediction.'},
+           {t:'If a surface conducts heat better, then ice on it will melt faster, because heat moves into the ice more quickly.', ok:true, fb:'Perfect! It has <b>If... then... because...</b>: a change, a measurable result and a scientific reason.'}],
+     hint:'A great hypothesis has three parts: IF (what you change)... THEN (what will happen)... BECAUSE (science reason).'},
+    {skill:'Predicting & hypothesising', crit:'B', icon:'🔮', q:'{Name} adds a <b>glass plate</b>. Glass conducts heat <b>better than plastic</b> but <b>worse than metal</b>. Predict its melting time.',
+     opts:[{t:'About 8 minutes', fb:'That would be faster than metal, but glass conducts heat <i>worse</i> than metal.'},
+           {t:'About 18 minutes', ok:true, fb:'Great reasoning! It should land between metal (12 min) and plastic (25 min).'},
+           {t:'About 35 minutes', fb:'That\u2019s slower than wood, but glass conducts better than plastic, so it should be faster than 25 min.'},
+           {t:'Exactly 12 minutes', fb:'That\u2019s the same as metal, but glass conducts worse than metal, so a bit slower.'}],
+     hint:'Look at the table. Glass is between metal and plastic, so its time should be between their times.'},
+    {skill:'Processing data', crit:'C', icon:'📊', q:'How much <b>longer</b> did the ice on the wooden board take to melt than the ice on the metal tray?',
+     opts:[{t:'43 minutes', fb:'That\u2019s 31 + 12. "How much longer" means find the <b>difference</b> (subtract).'},
+           {t:'6 minutes', fb:'Check the numbers in the table: wood 31 min, metal 12 min.'},
+           {t:'19 minutes', ok:true, fb:'Yes! 31 − 12 = 19 minutes longer.'},
+           {t:'12 minutes', fb:'That\u2019s just the metal time. Find the difference between wood and metal.'}],
+     hint:'"How much longer" = bigger time − smaller time. Find wood and metal in the table.'},
+    {skill:'Processing data', crit:'C', icon:'📊', q:'Each surface was tested only <b>once</b>. What would make the results more <b>reliable</b>?',
+     opts:[{t:'Repeat the test 3 times for each surface and calculate the average', ok:true, fb:'Exactly! Repeats help spot odd results and make the conclusion more trustworthy.'},
+           {t:'Use a bigger table', fb:'The table size doesn\u2019t change how trustworthy the results are.'},
+           {t:'Stop the timer early to save time', fb:'That would make the results <i>less</i> accurate!'},
+           {t:'Change the room temperature each time', fb:'That would make it unfair. Room temperature must stay the same.'}],
+     hint:'One try could be a fluke. What do scientists do to check a result wasn\u2019t luck?'}
+  ],
+  written:[
+    {id:'twist', tag:'📝 Your twist experiment', title:'Does {substance} change how fast ice melts? 🧂🧊', skillLabel:'Planning an investigation', crit:'B',
+     prompt:'Plan your own experiment using your secret ingredient: <b>{substance}</b>. Write: <b>(1)</b> a hypothesis using <i>If... then... because...</i>, and <b>(2)</b> what you will change, what you will measure, and at least one thing you will keep the same.',
+     starters:['If I sprinkle {substance} on the ice, then...','because...','I will change...','I will measure...','I will keep the same...'], minWords:15, sentences:[3,6],
+     clueWords:['if','then','because','change','measure','same','time','control','fair','repeat'], clueLabel:'🔬 Science words spotted',
+     placeholder:'If I sprinkle {substance} on the ice, then...'}
+  ],
+  finishHeading:'🔬 Brilliant science, {student}! 🎉',
+  key:{
+    myp:'Sciences A: Knowing & understanding (Q1–2) · B: Inquiring & designing (Q3–6 + written plan) · C: Processing & evaluating (Q7–8).',
+    how:'Alexa names a lab partner, picks a lab setting (cosmetic only) and a **twist ingredient** (salt, sugar, sand or her own) that is used in the written task. The experiment data is **fixed**: metal 12 min, plastic 25 min, wood 31 min.',
+    branches:'Her **prediction** (metal/plastic/wood) is recorded in the results but **not scored**. It is a useful window into her intuition. Many children predict wood or plastic because metal "feels coldest". That\u2019s a great conversation starter.',
+    written:`**The task:** plan a twist experiment with her ingredient: a hypothesis plus variables.
+
+**What actually happens (for your discussion):** **salt** makes ice melt noticeably faster (it lowers the freezing point; that's why salt is used on icy roads). **Sugar** also speeds melting, but less than salt for the same amount. **Sand** has little effect, though dark sand in sunlight can absorb light and warm slightly. **Any well-reasoned hypothesis is fine.** We're assessing the *planning*, not whether she knows the answer.
+
+**Model answer (Level 4), with salt:**
+> *If I sprinkle salt on an ice cube, then it will melt faster than an ice cube with nothing on it, because salt lowers the temperature that ice melts at. I will change whether there is salt or not (independent variable). I will measure the time until each cube melts completely (dependent variable). I will keep the same: ice cube size (10 g), the surface (plastic plates), the room temperature and the amount of salt (1 teaspoon). I will repeat it 3 times and take an average.*
+
+| Skill | 1 🌱 | 2 🌿 | 3 🌳 | 4 🌟 |
+|---|---|---|---|---|
+| **Hypothesis** (B) | Missing, or not testable ("salt is cool") | A prediction without a reason, or without a clear measurable result | If... then... with a plausible *because* | Precise, measurable, with a scientific reason (e.g. lowers melting/freezing point) and a comparison (vs. no ingredient) |
+| **Variables & method** (B) | No variables identified | One variable named correctly | Independent + dependent + one control, all correct | All three + several controls + repeats/average or a control cube with no ingredient |`,
+    gaps:[
+      ['A. "Feels cold = is cold"','Q1 = A or C; prediction = wood/plastic','Heat transfer not yet understood'],
+      ['B. States vs reactions','Q2 = A, B or C','Vocabulary of changes of state not secure'],
+      ['C. Variable confusion','Q3 = A (dependent) or Q4 = A/B wrong','Hasn\u2019t learned independent/dependent/control'],
+      ['D. Weak hypotheses','Q5 = A/B; written has no "because"','Doesn\u2019t know the If–then–because structure'],
+      ['E. Not using data to predict','Q6 = A, C or D','Doesn\u2019t interpolate between known results'],
+      ['F. Data arithmetic','Q7 = 43 (adds instead of subtracts)','"How much longer" = difference, not yet automatic'],
+      ['G. Reliability','Q8 wrong','Doesn\u2019t know why scientists repeat tests']],
+    tips:[
+      '**Kitchen science:** actually run the twist experiment this weekend (salt vs. no salt, timed). Real data makes variables stick. (C, D)',
+      '**"Change – Measure – Keep" card:** a 3-column card she fills in for any experiment (even cooking instant noodles!). (C)',
+      '**Touch test:** touch a metal spoon and a wooden spoon at room temperature, then discuss why metal *feels* colder. (A)',
+      '**Hypothesis frames:** "If I ___, then ___ will ___, because ___." Practise with 3 everyday questions. (D)',
+      '**State-change sorting:** melting, freezing, evaporation, condensation with everyday examples (ice lolly, kettle steam, cold can of drink). (B)',
+      '**"Between" predictions:** give two data points and ask for one in the middle (bus times, temperatures). (E)',
+      '**Three times rule:** for any test or measurement, ask "would I get the same if I did it again?" (G)'],
+    feeds:'Variables and method scores carry straight into **Session 10 (Inquiry Lab: paper planes)**, the early-IA skills strand.'
+  }
+};
+
+/* ===== ENGINE ===== */
+const EMAIL_TO='Doris.s.chiu@gmail.com', EMAIL_CC='francoisdemange@hotmail.com';
+const TOTAL_SECONDS = CONFIG.seconds || 600;
+const PRONOUNS={she:{sub:'she',obj:'her',pos:'her'},he:{sub:'he',obj:'him',pos:'his'}};
+const QS = CONFIG.questions, PARTS = CONFIG.parts||[], WRITTEN = CONFIG.written||[];
+const S={student:'Alexa',setup:{},custom:{},choices:[],qIndex:0,answers:[],hintsUsed:0,stars:0,written:{},ratings:{},picks:{},sketched:{},confidence:null,started:null,finished:null,step:0,wIndex:0};
+let timerHandle=null,timeUpShown=false;
+const $=s=>document.querySelector(s), app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function optFor(item){ const v=S.setup[item.id]; if(v==='custom') return Object.assign({key:'custom',label:(S.custom[item.id]||'').trim()||item.customFallback||'my idea'}, {vars:item.customVars?item.customVars((S.custom[item.id]||'').trim()||item.customFallback||'my idea'):{}}); return (item.options||[]).find(o=>o.key===v); }
+function tokens(){
+  const T={student:S.student};
+  (CONFIG.setup||[]).forEach(it=>{
+    if(it.type==='name'){ T[it.id]=cap((S.setup[it.id]||'').trim())||it.fallback||'Sam'; }
+    else if(it.type==='pron'){ const p=PRONOUNS[S.setup[it.id]||'she']; T.sub=p.sub;T.obj=p.obj;T.pos=p.pos;T.Sub=cap(p.sub);T.Pos=cap(p.pos); }
+    else if(it.type==='text'){ T[it.id]=(S.setup[it.id]||'').trim()||it.fallback||''; }
+    else if(it.type==='cards'){ const o=optFor(it)||(it.options||[])[0]; T[it.id]=o.label; Object.assign(T,o.vars||{}); }
+  });
+  PARTS.forEach((p,i)=>{ if(p.choice){ const k=S.choices[i]; const o=p.choice.opts[k!=null?k:0]; Object.assign(T,o.vars||{}); T['choice'+(i+1)]=o.label; }});
+  if(CONFIG.extraTokens) Object.assign(T,CONFIG.extraTokens(T,S));
+  Object.keys(T).forEach(k=>{ if(typeof T[k]==='string' && !(('Cap_'+k) in T)) T['Cap_'+k]=cap(T[k]); });
+  return T;
+}
+function fill(str){ if(str==null) return ''; const T=tokens(); let out=String(str);
+  for(let pass=0;pass<2;pass++) out=out.replace(/\{(\w+)\}/g,(m,k)=>k in T?(pass===0&&/\{\w+\}/.test(T[k])?T[k]:esc(T[k])):m);
+  return out.replace(/\*(.+?)\*/g,'<em>$1</em>'); }
+function plain(str){ return fill(str).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim(); }
+function toast(m,ms=2600){const d=document.createElement('div');d.className='toast';d.innerHTML=m;document.body.appendChild(d);setTimeout(()=>d.remove(),ms);}
+function burst(x,y){const em=['⭐','🎉','✨','💜','🌟'];for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst';s.textContent=em[i%5];s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',(Math.random()*240-120)+'px');s.style.setProperty('--dy',(Math.random()*-200-40)+'px');document.body.appendChild(s);setTimeout(()=>s.remove(),1000);}}
+function setProgress(f){$('#progress div').style.width=Math.round(f*100)+'%';}
+function updatePills(){$('#stars').textContent='⭐ '+S.stars;$('#hintsPill').textContent='💡 '+S.hintsUsed;}
+function fmt(sec){const a=Math.abs(sec);return Math.floor(a/60)+':'+String(a%60).padStart(2,'0');}
+function elapsed(){ if(!S.started) return 0; return Math.round(((S.finished||Date.now())-S.started)/1000); }
+function tick(){const left=TOTAL_SECONDS-elapsed(),el=$('#timer');
+  if(left>=0){el.textContent='⏱️ '+fmt(left);el.className='pill'+(left<=120?' low':'');}
+  else{el.textContent='⏱️ +'+fmt(left)+' extra';el.className='pill over'; if(!timeUpShown){timeUpShown=true;toast('⏰ 10 minutes are up! Finish the bit you\u2019re on, then head to the end. No rush! 😊',4500);}}}
+function startTimer(){ if(S.started) return; S.started=Date.now(); tick(); timerHandle=setInterval(tick,1000); }
+function stopTimer(){ if(!S.finished) S.finished=Date.now(); clearInterval(timerHandle); tick(); }
+window.addEventListener('beforeunload',e=>{ if(S.started&&!S.finished){e.preventDefault();e.returnValue='';}});
+function block(p){ const s=fill(p.replace(/^!/,'')); return /^\s*</.test(s)?s:`<p class="${p.startsWith('!')?'short':''}">${s}</p>`; }
+function storySoFar(upTo){ let h=''; for(let i=0;i<PARTS.length&&i<upTo;i++){ h+=(PARTS[i].paras||[]).map(block).join(''); if(PARTS[i].choice&&S.choices[i]!=null) h+=`<div class="branch">${fill(PARTS[i].choice.opts[S.choices[i]].text)}</div>`; } if(upTo>=PARTS.length&&CONFIG.reference) h+=`<div class="box">${fill(CONFIG.reference)}</div>`; return h; }
+function rereadDetails(upTo,label){ const h=storySoFar(upTo); return h?`<details style="margin:6px 0 10px"><summary class="muted">📜 ${label||'Re-read'}</summary><div class="reread-panel story">${h}</div></details>`:''; }
+
+/* ---- intro ---- */
+function renderIntro(){ setProgress(0);
+  app.innerHTML=`<div class="card"><span class="tag">${CONFIG.icon} ${esc(CONFIG.subject)} · Quest #${CONFIG.num}</span>
+  <h1>${fill(CONFIG.introHeading)}</h1><p>${fill(CONFIG.introText)}</p>
+  <table class="plan">${CONFIG.plan.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>
+  <p class="muted">⭐ Each right answer earns stars. 💡 Stuck? Press the hint button. Hints are totally allowed (they just mean a slightly smaller score for that question). ⏱️ The timer is a guide, not a race.</p>
+  <label class="q" for="student">Your name</label><input type="text" id="student" value="${esc(S.student)}" maxlength="30">
+  <button class="btn alt" id="goBtn" style="margin-top:16px">🚀 Start my 10-minute quest!</button></div>`;
+  $('#goBtn').onclick=()=>{ S.student=$('#student').value.trim()||'Alexa'; startTimer(); (CONFIG.setup&&CONFIG.setup.length)?renderSetup():startParts(); };
+}
+/* ---- setup ---- */
+function renderSetup(){ setProgress(.05);
+  let h=`<div class="card"><span class="tag">🎨 Step 1 · ${CONFIG.setupTag||'Make it yours'}</span><h2>${fill(CONFIG.setupHeading||'Make it yours, {student}!')}</h2>`;
+  CONFIG.setup.forEach((it,n)=>{ const num=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'][n]||'▶️';
+    h+=`<label class="q">${num} ${it.label}</label>`;
+    if(it.type==='name'||it.type==='text'){ h+=`<input type="text" data-in="${it.id}" placeholder="${esc(it.placeholder||'Type here...')}" maxlength="${it.max||30}" value="${esc(S.setup[it.id]||'')}">`;
+      if(it.ideas) h+=`<div class="chips">${it.ideas.map(x=>`<button class="chip" data-idea="${it.id}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`; }
+    else if(it.type==='pron'){ const v=S.setup[it.id]||'she'; S.setup[it.id]=v; h+=`<div class="chips"><button class="chip ${v==='she'?'sel':''}" data-pron="${it.id}" data-v="she">👧 girl (she/her)</button><button class="chip ${v==='he'?'sel':''}" data-pron="${it.id}" data-v="he">👦 boy (he/him)</button></div>`; }
+    else if(it.type==='cards'){ h+=`<div class="grid">${it.options.map(o=>`<button class="opt ${S.setup[it.id]===o.key?'sel':''}" data-card="${it.id}" data-v="${o.key}"><span class="big">${o.icon}</span>${esc(o.label)}</button>`).join('')}${it.custom?`<button class="opt ${S.setup[it.id]==='custom'?'sel':''}" data-card="${it.id}" data-v="custom"><span class="big">✏️</span>${esc(it.custom)}</button>`:''}</div>`;
+      if(it.custom) h+=`<input type="text" data-cust="${it.id}" placeholder="${esc(it.customPlaceholder||'Type your idea...')}" maxlength="30" value="${esc(S.custom[it.id]||'')}" style="margin-top:8px;display:${S.setup[it.id]==='custom'?'block':'none'}">`; }
+  });
+  h+=`<div><button class="btn alt" id="toParts" style="margin-top:18px">${CONFIG.setupGo||'▶️ Let\u2019s go!'}</button></div><p class="muted" id="setupMsg"></p></div>`;
+  app.innerHTML=h;
+  const keep=()=>{ app.querySelectorAll('[data-in]').forEach(i=>S.setup[i.dataset.in]=i.value); app.querySelectorAll('[data-cust]').forEach(i=>S.custom[i.dataset.cust]=i.value); };
+  app.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{ app.querySelector(`[data-in="${b.dataset.idea}"]`).value=b.dataset.v; keep(); });
+  app.querySelectorAll('[data-pron]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.pron]=b.dataset.v; renderSetup(); });
+  app.querySelectorAll('[data-card]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.card]=b.dataset.v; renderSetup(); if(b.dataset.v==='custom'){ const c=app.querySelector(`[data-cust="${b.dataset.card}"]`); c&&c.focus(); } });
+  $('#toParts').onclick=()=>{ keep(); const miss=[];
+    CONFIG.setup.forEach(it=>{ if((it.type==='name'||it.type==='text')&&!it.optional&&!(S.setup[it.id]||'').trim()) miss.push(it.short||'your answer');
+      if(it.type==='cards'&&(!S.setup[it.id]||(S.setup[it.id]==='custom'&&!(S.custom[it.id]||'').trim()))) miss.push(it.short||'a choice'); });
+    if(miss.length){ $('#setupMsg').innerHTML='👀 Don\u2019t forget '+miss.join(', ')+'!'; return; }
+    CONFIG.setup.forEach(it=>{ if(S.setup[it.id]&&typeof S.setup[it.id]==='string') S.setup[it.id]=S.setup[it.id].trim().replace(/\s+/g,' '); if(S.custom[it.id]) S.custom[it.id]=S.custom[it.id].trim(); });
+    startParts(); };
+}
+/* ---- story / scenario parts ---- */
+function startParts(){ S.step=0; PARTS.length?renderPart():startQuestions(); }
+function renderPart(){ const i=S.step, P=PARTS[i]; setProgress(.1+i*(.35/Math.max(1,PARTS.length)));
+  const title= i===0&&CONFIG.storyTitle?`<h1>${fill(CONFIG.storyTitle)}</h1>`:(P.title?`<h2>${fill(P.title)}</h2>`:'');
+  app.innerHTML=`<div class="card story"><span class="tag">${CONFIG.partTag||'📜 Story'} · Part ${i+1} of ${PARTS.length}</span>${title}${i>0?rereadDetails(i,'Re-read so far'):''}
+    ${(P.paras||[]).map(block).join('')}<div id="branchOut"></div>
+    ${P.choice?`<div class="choice-box" id="choiceBox"><h3>🤔 ${fill(P.choice.q)}</h3><div class="choices">${P.choice.opts.map((o,k)=>`<button class="opt" data-choice="${k}"><span class="big">${o.icon}</span><span>${fill(o.label)}</span></button>`).join('')}</div></div>`:`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`}
+  </div>`;
+  window.scrollTo(0,0);
+  const next=()=>{ if(i<PARTS.length-1){S.step++;renderPart();} else startQuestions(); };
+  if(!P.choice){ $('#nextPart').onclick=next; return; }
+  app.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.choice; S.choices[i]=k;
+    app.querySelectorAll('[data-choice]').forEach(x=>{x.disabled=true;x.classList.toggle('sel',x===b);});
+    const out=$('#branchOut'); out.innerHTML=`<div class="branch">${fill(P.choice.opts[k].text)}</div>`+(P.after?(P.after.map(block).join('')):'')+`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`;
+    $('#choiceBox').after(out); $('#nextPart').onclick=next; $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- MCQs ---- */
+function startQuestions(){ S.qIndex=0; renderQuestion(); }
+function renderQuestion(){ const qi=S.qIndex,Q=QS[qi]; setProgress(.46+qi*(.4/QS.length));
+  const a=S.answers[qi]||(S.answers[qi]={hint:false,choice:null});
+  app.innerHTML=`<div class="card"><span class="tag">${Q.icon||'❓'} Question ${qi+1} of ${QS.length} · ${esc(Q.skill)}</span>
+    ${Q.context?`<div class="ctx">${fill(Q.context)}</div>`:''}<h2>${fill(Q.q)}</h2>
+    <div class="answers">${Q.opts.map((o,k)=>`<button class="ans" data-ans="${k}"><b class="letter">${'ABCD'[k]}</b><span>${fill(o.t)}</span></button>`).join('')}</div>
+    <div id="hintArea">${a.hint?`<div class="hintbox">💡 ${fill(Q.hint)}</div>`:''}</div><div id="fb"></div>
+    <div><button class="btn ghost" id="hintBtn" ${a.hint?'disabled':''}>💡 ${a.hint?'Hint used':'Show a hint'}</button>${(PARTS.length||CONFIG.reference)?'<button class="btn ghost" id="rereadBtn">📜 Re-read</button>':''}</div><div id="rereadPanel"></div></div>`;
+  window.scrollTo(0,0);
+  const rb=$('#rereadBtn'); if(rb) rb.onclick=()=>{const p=$('#rereadPanel'); p.innerHTML=p.innerHTML?'':`<div class="reread-panel story">${storySoFar(PARTS.length)}</div>`;};
+  $('#hintBtn').onclick=()=>{ if(a.hint||a.choice!=null) return; a.hint=true; S.hintsUsed++; updatePills(); $('#hintArea').innerHTML=`<div class="hintbox">💡 ${fill(Q.hint)}</div>`; $('#hintBtn').disabled=true; $('#hintBtn').textContent='💡 Hint used'; };
+  app.querySelectorAll('[data-ans]').forEach(b=>b.onclick=ev=>{ if(a.choice!=null) return; const k=+b.dataset.ans,o=Q.opts[k]; a.choice=k; a.correct=!!o.ok; a.points=o.ok?(a.hint?1:2):0; S.stars+=a.points; updatePills();
+    app.querySelectorAll('[data-ans]').forEach((x,j)=>{x.disabled=true; if(Q.opts[j].ok) x.classList.add('right');}); if(!o.ok) b.classList.add('wrong'); $('#hintBtn').disabled=true;
+    const right=Q.opts.find(x=>x.ok);
+    $('#fb').innerHTML=`<div class="feedback ${o.ok?'good':'bad'}">${o.ok?(a.hint?'✅ Correct, with a hint! +1 ⭐':'🎉 Correct! +2 ⭐'):'❌ Not this time, but now you know!'}<br>${fill(o.fb)}${o.ok?'':`<br><b>The best answer:</b> ${fill(right.t)}<br>${fill(right.fb)}`}</div>
+      <button class="btn alt" id="nextQ">${qi<QS.length-1?'➡️ Next question':(WRITTEN.length?'📝 On to the last part!':'🏁 See my results')}</button>`;
+    if(o.ok) burst(ev.clientX||200,ev.clientY||300);
+    $('#nextQ').onclick=()=>{ if(qi<QS.length-1){S.qIndex++;renderQuestion();} else { S.wIndex=0; WRITTEN.length?renderWritten():finishScreen(); } };
+    $('#nextQ').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- written / creative / ratings ---- */
+function countSentences(t){ t=t.trim(); if(!t) return 0; return (t.match(/[^.!?。！？]+[.!?。！？]+/g)||[]).filter(s=>s.trim().length>1).length + (/[^.!?。！？\s]\s*$/.test(t)?1:0); }
+function countWords(t){ t=t.trim(); if(!t) return 0; const cjk=(t.match(/[\u3400-\u9fff]/g)||[]).length; const lat=t.replace(/[\u3400-\u9fff]/g,' ').trim(); return cjk+(lat?lat.split(/\s+/).length:0); }
+function clues(W,t){ if(!W.clueWords) return []; const low=' '+t.toLowerCase()+' '; return [...new Set(fill(W.clueWords.join('|')).toLowerCase().split('|').filter(w=>w&&low.includes(w)))]; }
+function renderWritten(){ const wi=S.wIndex, W=WRITTEN[wi], last=wi===WRITTEN.length-1; setProgress(.88+wi*.04);
+  let h=`<div class="card"><span class="tag">${W.tag||'📝 Your turn'}</span><h2>${fill(W.title)}</h2>${W.context?`<div class="ctx">${fill(W.context)}</div>`:''}<p>${fill(W.prompt)}</p>`;
+  if(W.type==='ratings'){ const R=S.ratings[W.id]||(S.ratings[W.id]={});
+    h+=W.items.map(it=>`<div class="rate"><span class="lbl">${fill(it.label)}</span><span class="chips">${[1,2,3,4].map(v=>`<button class="chip ${R[it.key]==v?'sel':''}" data-rate="${it.key}" data-v="${v}">${(W.scale||['🌱 1','🌿 2','🌳 3','🌟 4'])[v-1]}</button>`).join('')}</span></div>`).join('');
+  } else if(W.type==='pick'){ h+=`<div class="grid">${W.options.map(o=>`<button class="opt ${S.picks[W.id]===o.key?'sel':''}" data-pick="${o.key}"><span class="big">${o.icon}</span>${fill(o.label)}</button>`).join('')}</div>`;
+    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea>`;
+  } else {
+    if(W.starters) h+=`<p class="muted">Tap a starter to add it:</p><div class="chips">${W.starters.map(s=>`<button class="chip" data-start="${esc(fill(s))}">${fill(s)}</button>`).join('')}</div>`;
+    h+=`<textarea id="wtext" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
+    if(W.sketch) h+=`<details style="margin-top:10px" ${W.sketchOpen?'open':''}><summary><b>🖍️ Sketch pad (optional)</b> · draw with your finger or mouse</summary><canvas class="sketch" id="sk" width="700" height="260"></canvas>
+      <div class="chips">${['#2d2a4a','#e2483d','#ff9f1c','#ffd23f','#22a06b','#4cc9f0','#7b5cff','#ff5d8f'].map(c=>`<button class="chip" data-col="${c}" style="background:${c};width:34px;height:34px;padding:0"></button>`).join('')}<button class="chip" id="skClear">🧽 Clear</button><a class="chip" id="skSave" download="sketch-session-${CONFIG.num}.png" href="#">💾 Save picture</a></div></details>`;
+  }
+  if(PARTS.length||CONFIG.reference) h+=rereadDetails(PARTS.length,'Re-read');
+  if(last) h+=`<label class="q">🌡️ How did today's quest feel?</label><div class="conf">${[['1','🌱','Tricky!'],['2','🌿','OK-ish'],['3','🌳','Pretty good'],['4','🌟','Easy-peasy!']].map(c=>`<button class="opt ${S.confidence===c[0]?'sel':''}" data-conf="${c[0]}"><span class="big">${c[1]}</span>${c[0]} · ${c[2]}</button>`).join('')}</div>`;
+  h+=`<button class="btn alt" id="wNext" style="margin-top:16px">${last?'🏁 Finish &amp; see my results':'➡️ Next'}</button><p class="muted" id="wMsg"></p></div>`;
+  app.innerHTML=h; window.scrollTo(0,0);
+  const ta=$('#wtext');
+  const upd=()=>{ if(!ta) return; S.written[W.id]=ta.value; const st=$('#wstats'); if(!st) return; const c=clues(W,ta.value), n=countSentences(ta.value);
+    st.innerHTML=`<span>✍️ ${countWords(ta.value)} words</span><span>📏 ${n} sentence${n===1?'':'s'}${W.sentences?(n>=W.sentences[0]?' ✅':` (aim for ${W.sentences[0]}${W.sentences[1]!==W.sentences[0]?'–'+W.sentences[1]:''})`):''}</span>${W.clueWords?`<span>${W.clueLabel||'🔍 Key words'}: ${c.length?esc(c.join(', ')):'none yet'}</span>`:''}`; };
+  if(ta){ ta.oninput=upd; upd(); }
+  app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{ const s=b.dataset.start.replace(/\.\.\.$|…$/,' '); ta.value=ta.value.trim()?ta.value.replace(/\s*$/,'')+' '+s:s; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); upd(); });
+  app.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{ S.ratings[W.id][b.dataset.rate]=+b.dataset.v; app.querySelectorAll(`[data-rate="${b.dataset.rate}"]`).forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ S.picks[W.id]=b.dataset.pick; app.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-conf]').forEach(b=>b.onclick=()=>{ S.confidence=b.dataset.conf; app.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  const cv=$('#sk'); if(cv){ const ctx=cv.getContext('2d'); let col='#2d2a4a',down=false; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round';
+    const pos=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+    cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y);ctx.strokeStyle=col;S.sketched[W.id]=true;};
+    cv.onpointermove=e=>{if(!down)return;const [x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke();}; cv.onpointerup=()=>down=false;
+    app.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>col=b.dataset.col); $('#skClear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);S.sketched[W.id]=false;};
+    $('#skSave').onclick=()=>{ $('#skSave').href=cv.toDataURL('image/png'); }; }
+  $('#wNext').onclick=()=>{ if(ta) S.written[W.id]=ta.value;
+    if(W.type==='ratings'){ const miss=W.items.filter(it=>!S.ratings[W.id][it.key]); if(miss.length){ $('#wMsg').textContent='🌡️ Rate every line first ('+miss.length+' to go).'; return; } }
+    else if(W.type==='pick'){ if(!S.picks[W.id]){ $('#wMsg').textContent='👆 Pick one first!'; return; } if(W.followUp&&countWords(ta.value)<(W.minWords||3)){ $('#wMsg').textContent='✍️ Add a few words to explain.'; return; } }
+    else if(countWords(ta.value)<(W.minWords||5)){ $('#wMsg').textContent='✍️ Write a little more first (at least '+(W.minWords||5)+' words)!'; return; }
+    if(last&&!S.confidence){ $('#wMsg').textContent='🌡️ Pick how the quest felt (1–4).'; return; }
+    if(last) finishScreen(); else { S.wIndex++; renderWritten(); } };
+}
+/* ---- scoring & results ---- */
+function skillScores(){ const sk={}; QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const s=sk[Q.skill]=sk[Q.skill]||{pts:0,hints:0,correct:0,n:0,icon:Q.icon,crit:Q.crit};
+  s.pts+=a.points||0; s.hints+=a.hint?1:0; s.correct+=a.correct?1:0; s.n++; });
+  Object.values(sk).forEach(v=>v.level=Math.max(1,Math.min(4,Math.round(v.pts/(2*v.n)*4)))); return sk; }
+const LEVELS={1:'🌱 Beginning',2:'🌿 Developing',3:'🌳 Secure',4:'🌟 Extending'};
+const lvlWord=l=>LEVELS[l]?LEVELS[l].replace(/^\S+ /,''):'';
+function setupLines(){ const L=[]; (CONFIG.setup||[]).forEach(it=>{ let v;
+  if(it.type==='pron') v=S.setup[it.id]==='he'?'boy (he/him)':'girl (she/her)';
+  else if(it.type==='cards'){ const o=optFor(it); v=o?o.label+(S.setup[it.id]==='custom'?' (own idea)':''):'-'; }
+  else v=(S.setup[it.id]||'').trim()||'-';
+  L.push(`${plain(it.resultLabel||it.label)}: ${v}`); }); return L; }
+function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()), L=[];
+  L.push(`${S.student.toUpperCase()}'S RESULTS · Session ${String(CONFIG.num).padStart(2,'0')} · ${CONFIG.title} (${CONFIG.subject} diagnostic)`);
+  L.push(`Date: ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+  L.push(`Time taken: ${fmt(elapsed())} (target ${fmt(TOTAL_SECONDS)})`);
+  L.push(`Stars: ${S.stars}/${QS.length*2} · Questions correct: ${S.answers.filter(a=>a&&a.correct).length}/${QS.length} · Hints used: ${S.hintsUsed}`);
+  if((CONFIG.setup||[]).length||PARTS.some(p=>p.choice)){ L.push('','--- MY CHOICES ---'); L.push(...setupLines());
+    PARTS.forEach((p,i)=>{ if(p.choice) L.push(`Choice ${i+1}: ${plain(p.choice.q)} -> ${S.choices[i]!=null?plain(p.choice.opts[S.choices[i]].label):'(none)'}`); }); }
+  L.push('','--- QUESTIONS ---');
+  QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const ans=a.choice!=null?`${'ABCD'[a.choice]}. ${plain(Q.opts[a.choice].t)}`:'(not answered)'; const r=Q.opts.findIndex(o=>o.ok);
+    L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[r]}`}`); });
+  L.push('','--- SKILL SCORES (1-4) ---');
+  Object.entries(sk).forEach(([k,v])=>L.push(`${k}${v.crit?' [MYP '+v.crit+']':''}: ${v.level}/4 ${lvlWord(v.level)} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
+  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${W.skillLabel||plain(W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
+  WRITTEN.forEach(W=>{ L.push('',`--- ${plain(W.resultLabel||W.title).toUpperCase()} ---`);
+    if(W.type==='ratings'){ W.items.forEach(it=>L.push(`${plain(it.label)}: ${S.ratings[W.id]&&S.ratings[W.id][it.key]||'-'}/4`)); }
+    else if(W.type==='pick'){ const o=W.options.find(o=>o.key===S.picks[W.id]); L.push(`Picked: ${o?plain(o.label):'-'}`); if(W.followUp) L.push(`${plain(W.followUp)} ${(S.written[W.id]||'').trim()}`); }
+    else { const t=(S.written[W.id]||'').trim(); L.push(t); const c=clues(W,t); L.push(`(${countWords(t)} words, ${countSentences(t)} sentences${W.clueWords?', key words: '+(c.join(', ')||'none'):''}${W.sketch?', sketch drawn: '+(S.sketched[W.id]?'yes (saved separately)':'no'):''})`); } });
+  L.push('',`How the quest felt (1-4): ${S.confidence} ${lvlWord(S.confidence)}`);
+  return L.join('\n'); }
+function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), txt=resultsText();
+  const subj=`Session ${String(CONFIG.num).padStart(2,'0')} results: ${S.student} – ${CONFIG.title}`;
+  let mailBody=txt; if(mailBody.length>1800) mailBody=mailBody.slice(0,1800)+'\n...(cut short - please also paste the full results from "Copy my results")';
+  const mail=`mailto:${EMAIL_TO}?cc=${encodeURIComponent(EMAIL_CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mailBody)}`;
+  app.innerHTML=`<div class="card"><span class="tag">🏆 Quest complete!</span><h1>${fill(CONFIG.finishHeading||'Amazing work, {student}! 🎉')}</h1>
+    <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
+    <h2 style="margin-top:18px">Your skill scores</h2>
+    ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon||''} ${esc(k)}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div><div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div><div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
+    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(W.skillLabel||plain(W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
+    <h2 style="margin-top:18px">📋 Send your results</h2><p>Tap <b>Copy my results</b>, then paste into an email to Mum, or tap <b>Open in email</b>.</p>
+    <button class="btn alt" id="copyBtn">📋 Copy my results</button><a class="btn ghost" id="mailBtn" href="${mail}">✉️ Open in email</a><p class="muted" id="copyMsg"></p>
+    <pre id="resultText">${esc(txt)}</pre><button class="btn ghost" id="again">🔁 Play again (new choices)</button></div>`;
+  window.scrollTo(0,0); burst(innerWidth/2,200);
+  $('#copyBtn').onclick=async()=>{ let ok=false; try{ if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(txt);ok=true;} }catch(e){}
+    if(!ok){ const t=document.createElement('textarea'); t.value=txt; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); try{ok=document.execCommand('copy');}catch(e){} t.remove(); }
+    $('#copyMsg').innerHTML=ok?'✅ Copied! Now paste it into an email or message to Mum.':'⚠️ Couldn\u2019t copy automatically. Press and hold the text below, choose "Select all" and then "Copy".'; };
+  $('#again').onclick=()=>{ if(confirm('Start again? (Copy your results first!)')) location.reload(); };
+}
+/* ---- self-test helper (used by automated checks only) ---- */
+window.__selfTest=function(){ const bad=new Set(), saved=JSON.stringify(S); const setup=CONFIG.setup||[];
+  const combos=[{}]; setup.forEach(it=>{ let vals=[]; if(it.type==='pron') vals=['she','he']; else if(it.type==='cards') vals=it.options.map(o=>o.key).concat(it.custom?['custom']:[]); else vals=['Testname'];
+    const n=[]; combos.forEach(c=>vals.forEach(v=>n.push(Object.assign({},c,{[it.id]:v})))); combos.splice(0,combos.length,...n.slice(0,400)); });
+  const maxC=Math.max(1,...PARTS.map(p=>p.choice?p.choice.opts.length:1));
+  combos.forEach(c=>{ S.setup=c; setup.forEach(it=>{ if(it.type==='cards') S.custom[it.id]='test idea'; });
+    for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
+      let all=[CONFIG.storyTitle,CONFIG.reference,CONFIG.setupHeading,CONFIG.finishHeading]; PARTS.forEach(p=>{ all.push(...(p.paras||[]),...(p.after||[]),p.title); if(p.choice){ all.push(p.choice.q); p.choice.opts.forEach(o=>all.push(o.label,o.text)); } });
+      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
+      all.forEach(s=>{ if(s){ const m=fill(s).match(/\{\w+\}/g); if(m) m.forEach(x=>bad.add(x)); } }); } });
+  Object.assign(S,JSON.parse(saved));
+  const pos=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); const multi=QS.filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length;
+  return {leftover:[...bad], combos:combos.length, positions:pos, badOk:multi}; };
+$('#hdrTitle').textContent=`${CONFIG.icon} ${CONFIG.title} · Session ${String(CONFIG.num).padStart(2,'0')}`;
+document.title=`Session ${CONFIG.num} · ${CONFIG.title}`;
+renderIntro(); updatePills();
+</script>
+</body>
+</html>
