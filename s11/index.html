@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 · Is a Tomato a Fruit?</title>
+<style>
+  :root{--bg1:#ffecd2;--bg2:#fcb69f;--ink:#2d2a4a;--card:#fff;--pri:#7b5cff;--pri2:#5a3de0;--ok:#22a06b;--okbg:#e3fcef;--bad:#e2483d;--badbg:#ffebe9;--warn:#ff9f1c;--sky:#4cc9f0;--pink:#ff5d8f;--yellow:#ffd23f}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Trebuchet MS","Segoe UI","Noto Sans",system-ui,-apple-system,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;font-size:18px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(45,42,74,.95);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  header .title{font-weight:bold;flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+  #timer.low{background:var(--warn);color:#2d2a4a} #timer.over{background:var(--pink)}
+  #progress{height:6px;background:rgba(255,255,255,.4)} #progress div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--pri),var(--pink));transition:width .5s}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .card{background:var(--card);border-radius:22px;padding:20px 20px 22px;margin:14px 0;box-shadow:0 8px 24px rgba(90,61,224,.15);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.97) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-size:28px;margin:4px 0 8px;color:var(--pri2)} h2{font-size:22px;margin:4px 0 10px;color:var(--pri2)} h3{margin:8px 0}
+  .muted{color:#6b6790;font-size:15px}
+  .tag{display:inline-block;font-size:13px;font-weight:bold;padding:2px 10px;border-radius:999px;background:#efeaff;color:var(--pri2);margin-bottom:6px}
+  label.q{display:block;font-weight:bold;margin:16px 0 6px}
+  input[type=text],textarea{width:100%;font:inherit;padding:10px 12px;border:3px solid #ddd6ff;border-radius:14px;outline:none;background:#fbfaff}
+  input[type=text]:focus,textarea:focus{border-color:var(--pri)} textarea{min-height:140px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{border:2px solid #ddd6ff;background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+  .chip:hover,.chip.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .opt{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:18px;padding:12px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+  .opt .big{font-size:32px;display:block} .opt:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .opt.sel{border-color:var(--pri);background:#f3efff;box-shadow:0 0 0 3px rgba(123,92,255,.25)}
+  .btn{display:inline-block;border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:bold;cursor:pointer;background:linear-gradient(180deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 4px 0 #3f2aa8;margin:6px 6px 0 0;text-decoration:none}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:linear-gradient(180deg,#ffe066,#ffc300);color:var(--ink);box-shadow:0 4px 0 #c99700}
+  .btn.ghost{background:#fff;color:var(--pri2);border:2px solid #ddd6ff;box-shadow:none}
+  .story p{margin:0 0 12px;font-size:19px} .story p.short{font-weight:bold;font-size:21px;color:var(--pink)}
+  .branch{background:#fff8e1;border-left:5px solid var(--yellow);padding:8px 12px;border-radius:8px;margin:0 0 12px}
+  .story em{color:#1d5fa8}
+  .box{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:10px 0;font-size:17px}
+  .box table,.ctx table{border-collapse:collapse;width:100%;font-size:16px;margin:6px 0}
+  .box td,.box th,.ctx td,.ctx th{border:1px solid #cfd8e3;padding:5px 8px;text-align:left}
+  .box th,.ctx th{background:#eaf4ff}
+  .ctx{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:8px 0 4px;font-size:17px}
+  .choice-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#e0f7ff,#f3efff)}
+  .choice-box h3{margin:0 0 10px;font-size:19px} .choices{display:grid;gap:10px}
+  .choices .opt{text-align:left;display:flex;gap:10px;align-items:center} .choices .opt .big{font-size:26px;display:inline}
+  .answers{display:grid;gap:10px;margin-top:12px}
+  .ans{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;font:inherit;text-align:left;cursor:pointer;display:flex;gap:10px}
+  .ans b.letter{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:#efeaff;color:var(--pri2)}
+  .ans:hover:not(:disabled){border-color:var(--sky)} .ans.right{border-color:var(--ok);background:var(--okbg)} .ans.wrong{border-color:var(--bad);background:var(--badbg)}
+  .ans:disabled,.opt:disabled{cursor:default;color:var(--ink);opacity:1} .choices .opt:disabled:not(.sel){opacity:.55}
+  .feedback{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:17px;animation:pop .3s}
+  .feedback.good{background:var(--okbg);border:2px solid var(--ok)} .feedback.bad{background:var(--badbg);border:2px solid var(--bad)}
+  .hintbox{margin-top:12px;padding:10px 14px;border-radius:14px;background:#fff8e1;border:2px dashed var(--warn);font-size:16px}
+  .reread-panel{margin-top:10px;max-height:320px;overflow:auto;border:2px solid #ece8ff;border-radius:14px;padding:12px;background:#fdfcff}
+  .reread-panel p{font-size:16px;margin:0 0 8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px} .stats span{background:#efeaff;border-radius:999px;padding:4px 12px;font-size:15px}
+  .skill{margin:10px 0} .skill .row{display:flex;justify-content:space-between;gap:8px;font-weight:bold;flex-wrap:wrap}
+  .bar{height:16px;border-radius:999px;background:#eee;overflow:hidden;margin-top:4px} .bar div{height:100%;border-radius:999px}
+  .lvl1{background:#ff8fa3}.lvl2{background:#ffc300}.lvl3{background:#4cc9f0}.lvl4{background:#22a06b}
+  pre#resultText{white-space:pre-wrap;word-break:break-word;background:#fbfaff;border:2px solid #ece8ff;border-radius:14px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;z-index:50;font-weight:bold;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:pop .3s;max-width:90%;text-align:center}
+  .burst{position:fixed;pointer-events:none;font-size:28px;z-index:60;animation:fly 1s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+  .conf{display:flex;gap:8px;flex-wrap:wrap} .conf .opt{flex:1;min-width:120px}
+  .plan{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px} .plan td{padding:6px 8px;border-bottom:1px dashed #ddd}
+  .rate{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #e5e0ff;flex-wrap:wrap}
+  .rate .lbl{flex:1;min-width:160px} .rate .chips{margin-top:0}
+  canvas.sketch{width:100%;height:260px;border:3px dashed #ddd6ff;border-radius:14px;background:#fff;touch-action:none;display:block;margin-top:8px}
+  details summary{cursor:pointer}
+  @media (max-width:520px){body{font-size:17px} h1{font-size:24px} .story p{font-size:18px} header .title{font-size:13px} header{gap:6px;padding:8px 10px} .pill{font-size:14px;padding:3px 9px}}
+</style>
+</head>
+<body>
+<header><div class="title" id="hdrTitle"></div><div class="pill" id="stars">⭐ 0</div><div class="pill" id="hintsPill">💡 0</div><div class="pill" id="timer">⏱️ 10:00</div></header>
+<div id="progress"><div></div></div>
+<main id="app"></main>
+<script>
+/* ===== SESSION CONTENT (original, written for Alexa) ===== */
+const EVID = '<b>🗂️ Evidence cards</b><br>🔬 <b>Botanist:</b> "In science, a <i>fruit</i> is the part of a plant that grows from the flower and contains the seeds. Tomatoes grow from flowers and are full of seeds."<br>👩‍🍳 <b>Chef:</b> "In the kitchen, we call savoury foods that go in main dishes <i>vegetables</i>. Tomatoes go in soups, sauces and salads, not fruit salad!"<br>⚖️ <b>History:</b> In <b>1893</b>, the US Supreme Court decided that tomatoes should count as <i>vegetables</i> for taxes on imported food, because of how people use them in meals.';
+const CONFIG = {
+  num:11, subject:'Think Lab (early TOK)', icon:'🤔', title:'Is a Tomato a Fruit?',
+  introHeading:'Hi {student}! Welcome to the Think Lab 🤔🍅',
+  introText:'It sounds like a silly question, but "Is a tomato a fruit?" is secretly a BIG question about <i>how we know things</i>. You\u2019ll sort facts from opinions, weigh evidence, see different perspectives, and give your verdict. (IB students do this in Theory of Knowledge!)',
+  plan:[['🎨 Set the scene','~1 min'],['🍅 The great tomato debate','~2 min'],['❓ 8 thinking questions','~4 min'],['📝 Your verdict','~2½ min']],
+  setupHeading:'Set the scene, {student}!',
+  setup:[
+    {id:'Name', type:'name', label:'Who are you debating with?', ideas:['Uncle Ben','Cousin Lulu','Professor Pip','Big Sis'], fallback:'Cousin Lulu', short:'a name', resultLabel:'Debating with'},
+    {id:'pron', type:'pron', label:'Is that person a...'},
+    {id:'scene', type:'cards', label:'Where does the debate happen?', short:'a place', resultLabel:'Debate scene',
+     options:[{key:'dimsum', icon:'🥟', label:'Family dim sum lunch', vars:{sceneText:'Over steaming baskets of dim sum, a slice of tomato falls out of {Name}\u2019s sandwich.'}},
+              {key:'quiz', icon:'📺', label:'TV quiz show', vars:{sceneText:'Bright lights! You\u2019re on the TV quiz show <i>Brain Battle</i>, and the final question appears on the giant screen.'}},
+              {key:'alien', icon:'👽', label:'An alien visitor', vars:{sceneText:'A friendly alien lands in the garden, holds up a tomato and beeps: "EXPLAIN. THIS. OBJECT."'}}]}
+  ],
+  setupGo:'🍅 Start the debate!', partTag:'🤔 Think Lab',
+  storyTitle:'The Great Tomato Debate',
+  parts:[
+    {paras:['{sceneText}','"Everyone knows a tomato is a <b>vegetable</b>," says {Name} confidently. "It goes in salads!"'],
+     choice:{q:'What do YOU think, before seeing any evidence?', opts:[
+      {icon:'🍓', label:'It\u2019s a fruit', text:'You say: "It\u2019s a fruit!" {Name} raises an eyebrow. "Prove it."'},
+      {icon:'🥕', label:'It\u2019s a vegetable', text:'You agree: "It\u2019s a vegetable!" {Name} grins. But then you wonder: how do we actually <i>know</i>?'},
+      {icon:'🤷', label:'It depends...', text:'You say: "Hmm... it depends." {Name} looks puzzled. "Depends on what?"'}]},
+     after:['You pull out three evidence cards:','<div class="box">'+EVID+'</div>']}
+  ],
+  reference:EVID,
+  questions:[
+    {skill:'Facts, opinions & definitions', crit:'TOK: claims', icon:'🏷️', q:'Which of these is a <b>fact</b> (something that can be checked)?',
+     opts:[{t:'Tomatoes are delicious', fb:'That\u2019s an <b>opinion</b>. Some people love them, some don\u2019t!'},{t:'Tomatoes contain seeds', ok:true, fb:'Yes! Cut one open and check. Facts can be tested with evidence.'},{t:'Tomatoes are the best salad food', fb:'"Best" is an opinion. People disagree.'},{t:'Everyone should eat tomatoes', fb:'"Should" statements are usually opinions or values, not facts.'}],
+     hint:'A fact can be checked with evidence. Watch out for words like "best", "delicious" and "should".'},
+    {skill:'Facts, opinions & definitions', crit:'TOK: claims', icon:'🏷️', q:'<i>"A fruit is the part of a plant that grows from the flower and contains seeds."</i> This sentence is a...',
+     opts:[{t:'opinion', fb:'It\u2019s not just someone\u2019s feeling. It explains what a word means in science.'},{t:'prediction', fb:'It doesn\u2019t say what <i>will</i> happen.'},{t:'guess', fb:'Scientists agreed on this meaning. It\u2019s not a guess.'},{t:'definition', ok:true, fb:'Correct! A <b>definition</b> tells us what a word means. And the definition you use changes the answer!'}],
+     hint:'This sentence explains what the WORD "fruit" means. What do we call that?'},
+    {skill:'Evidence & justification', crit:'TOK: evidence', icon:'🔍', q:'Which is the <b>strongest evidence</b> that a tomato is a fruit (in science)?',
+     opts:[{t:'It grows from the tomato plant\u2019s flower and contains seeds', ok:true, fb:'Yes! That matches the scientific definition exactly.'},{t:'It\u2019s red, like a strawberry', fb:'Colour doesn\u2019t decide it. Red peppers are red too!'},{t:'My friend told me so', fb:'Someone saying it isn\u2019t strong evidence on its own. What\u2019s their reason?'},{t:'It\u2019s round', fb:'Lots of things are round, like peas and potatoes.'}],
+     hint:'The strongest evidence matches the definition. Look at the botanist\u2019s card.'},
+    {skill:'Evidence & justification', crit:'TOK: evidence', icon:'🔍', q:'{Name} says: <i>"It\u2019s a vegetable because it goes in salads."</i> What is the <b>weakness</b> in this argument?',
+     opts:[{t:'Salads are unhealthy', fb:'Salads are usually healthy, and that isn\u2019t the issue anyway.'},{t:'{Name} is too young to know', fb:'Age isn\u2019t the problem. Look at the <i>reason</i> given.'},{t:'Being in salads is about how we cook it, not what part of the plant it is', ok:true, fb:'Sharp thinking! {Name}\u2019s reason fits a <b>cooking</b> definition, not a <b>science</b> definition. (Strawberries can go in salads too!)'},{t:'There is no weakness', fb:'Think: does putting something in a salad change what part of a plant it is?'}],
+     hint:'Does the reason (salads) connect to the scientific definition (flowers & seeds)? Or to something else?'},
+    {skill:'Perspectives', crit:'TOK: perspectives', icon:'👀', q:'The chef calls a tomato a vegetable; the botanist calls it a fruit. <b>Who is right?</b>',
+     opts:[{t:'Only the chef, because chefs work with food', fb:'The chef is right for <i>cooking</i>, but the botanist is right in <i>science</i>.'},{t:'Only the botanist, because science is always right', fb:'Science is right about plant parts, but cooking uses a different, useful system.'},{t:'Neither of them', fb:'Both have good reasons within their own field.'},{t:'Both, depending on whether you use a cooking or a science definition', ok:true, fb:'Exactly! Knowledge can depend on the <b>perspective</b> and the <b>purpose</b>. That\u2019s a big TOK idea!'}],
+     hint:'Each person uses a different definition. Can both be useful in their own world?'},
+    {skill:'Perspectives', crit:'TOK: perspectives', icon:'👀', q:'In 1893, a US court decided tomatoes counted as <b>vegetables</b> for tax purposes. What does this show?',
+     opts:[{t:'Judges don\u2019t understand plants', fb:'The judges knew the botanical facts. They chose the everyday meaning for a legal purpose.'},{t:'Different groups can classify the same thing differently for different purposes', ok:true, fb:'Yes! Science, cooking and law each had a different <i>purpose</i>, so they used different categories.'},{t:'Tomatoes changed in 1893', fb:'The tomato didn\u2019t change. The way people <i>classified</i> it did.'},{t:'Tomatoes aren\u2019t real', fb:'Ha! They\u2019re very real. It\u2019s our labels that are being debated.'}],
+     hint:'Why might a court care about labels? Think about PURPOSE (taxes).'},
+    {skill:'Asking knowledge questions', crit:'TOK: questioning', icon:'❔', q:'Which is the best <b>"how do we know?"</b> question to explore next?',
+     opts:[{t:'What colour are tomatoes?', fb:'That\u2019s easy to look up. It doesn\u2019t make us think about knowledge itself.'},{t:'Do you like ketchup?', fb:'That\u2019s a personal preference question.'},{t:'How do definitions affect what we accept as true?', ok:true, fb:'Superb! This is a real <b>knowledge question</b>: it\u2019s open, general, and about how we know.'},{t:'How many tomatoes fit in a box?', fb:'That\u2019s a maths puzzle, not a question about knowledge.'}],
+     hint:'Great knowledge questions are OPEN, can\u2019t be answered with a simple fact, and are about HOW we know.'},
+    {skill:'Asking knowledge questions', crit:'TOK: questioning', icon:'❔', q:'Which shows the best <b>open-minded</b> thinking?',
+     opts:[{t:'"I used to think it was a vegetable, but the scientific evidence changed my mind, though I can see why chefs disagree."', ok:true, fb:'Wonderful! You changed your mind because of evidence AND you understand another view. That\u2019s TOK thinking.'},{t:'"I\u2019m right and everyone else is wrong."', fb:'That shuts down thinking. What evidence might change your mind?'},{t:'"It doesn\u2019t matter, so I won\u2019t think about it."', fb:'Small questions can lead to big ideas about knowledge!'},{t:'"I believe whatever the last person told me."', fb:'Open-minded doesn\u2019t mean accepting everything. Weigh the evidence.'}],
+     hint:'Open-minded = willing to change your mind because of evidence, while understanding other views.'}
+  ],
+  written:[
+    {id:'verdict', tag:'📝 Your verdict', title:'So... is a tomato a fruit? 🍅⚖️', skillLabel:'My justified verdict', crit:'TOK: reasoning',
+     prompt:'At the start you said: <b>{choice1}</b>. Now give your <b>final verdict</b> in <b>3–4 sentences</b>. Use a <b>definition</b>, a piece of <b>evidence</b>, and <b>another perspective</b>. Did your thinking change? Why or why not?',
+     starters:['My verdict is that...','Using the science definition...','However, from a chef\u2019s perspective...','At first I thought..., but now...','This shows that knowledge can depend on...'], minWords:25, sentences:[3,4],
+     clueWords:['definition','evidence','perspective','however','because','science','chef','seeds','flower','depends','purpose'], clueLabel:'🤔 Thinking words spotted',
+     placeholder:'My verdict is that...'}
+  ],
+  finishHeading:'🤔 Brilliant thinking, {student}! 🎉',
+  key:{
+    myp:'Skills strand → **early TOK** (Theory of Knowledge). Loosely: claims (facts / opinions / definitions), evidence & justification, perspectives, and asking knowledge questions. This also links to the MYP I&S Criterion D (thinking critically) and the ATL thinking skills.',
+    how:'Alexa names a debating partner and picks a scene (dim sum lunch / TV quiz / alien visitor). Before seeing any evidence, she commits to **fruit / vegetable / it depends**. This is recorded and shown again before her verdict, so you can see whether her thinking moved. The three evidence cards are fixed. The 1893 court case is real (*Nix v. Hedden*, US Supreme Court).',
+    branches:'There is no "right" starting answer. A child who starts with "it depends" is often already thinking in a TOK way. What matters is the **quality of justification** in the verdict.',
+    written:`**The task:** a final verdict using a definition, evidence and another perspective, plus whether her thinking changed.
+
+**Model answer (Level 4):**
+> *My verdict is that a tomato is a fruit in science but a vegetable in cooking. Using the science definition, a fruit grows from a flower and contains seeds, and tomatoes do both. However, from a chef's perspective tomatoes are used in savoury dishes like vegetables, and even a US court called them vegetables in 1893 for taxes. At first I thought it was simply a vegetable, but now I realise the answer depends on which definition and purpose you use.*
+
+| Skill | 1 🌱 | 2 🌿 | 3 🌳 | 4 🌟 |
+|---|---|---|---|---|
+| **Justification** (claims + evidence) | A verdict with no reason | A reason, but it's opinion or "someone said so" | Uses a definition and/or evidence correctly to support the verdict | Clearly links definition → evidence → verdict; evaluates the strength of reasons |
+| **Perspectives & reflection** | One view only, dismissive of others | Mentions another view without explaining it | Explains another perspective fairly | Balances perspectives, recognises the role of purpose and definitions, and reflects on her own change in thinking |`,
+    gaps:[
+      ['A. Fact vs opinion','Q1 wrong','Can\u2019t yet separate checkable claims from preferences'],
+      ['B. Not recognising definitions','Q2 wrong','Doesn\u2019t see that word meanings shape answers'],
+      ['C. Weak evidence','Q3 = B/C/D','Accepts surface features or authority as proof'],
+      ['D. Missing the flaw','Q4 = D','Doesn\u2019t yet test whether a reason actually supports a claim'],
+      ['E. Either/or thinking','Q5 = A/B','Struggles with "both can be right in different contexts"'],
+      ['F. Closed questions','Q7 wrong','Asks factual questions rather than knowledge questions'],
+      ['G. Fixed mindset in arguments','Q8 = B/C/D; verdict ignores other views','Open-mindedness (an IB Learner Profile attribute) is still developing']],
+    tips:[
+      '**Dinner-table TOK:** one question per week. "Is a hot dog a sandwich?" "Is Pluto a planet?" "Is a virus alive?" Always ask "How do we know?" (B, E)',
+      '**Fact or opinion? speed game:** read headlines or adverts aloud and she shouts FACT or OPINION. (A)',
+      '**"Because..." rule:** any claim at home needs a "because". Then ask "is that a good reason?" (C, D)',
+      '**Perspective swap:** argue the side she disagrees with for 1 minute. (E, G)',
+      '**Question ladder:** turn a fact question ("What colour are tomatoes?") into a knowledge question ("Why do different groups classify things differently?"). (F)',
+      '**Model changing your mind:** say out loud when evidence changes YOUR view. Children copy this. (G)'],
+    feeds:'This is the **early TOK** strand. Scores go into the rotating skills slot (TOK → EE → IA) from Week 3; perspectives also link back to **Session 04 (I&S sources)**.'
+  }
+};
+
+/* ===== ENGINE ===== */
+const EMAIL_TO='Doris.s.chiu@gmail.com', EMAIL_CC='francoisdemange@hotmail.com';
+const TOTAL_SECONDS = CONFIG.seconds || 600;
+const PRONOUNS={she:{sub:'she',obj:'her',pos:'her'},he:{sub:'he',obj:'him',pos:'his'}};
+let QS = CONFIG.questions||[]; const PARTS = CONFIG.parts||[]; const WRITTEN = CONFIG.written||[];
+const S={student:'Alexa',setup:{},custom:{},choices:[],qIndex:0,answers:[],hintsUsed:0,stars:0,written:{},ratings:{},picks:{},sketched:{},confidence:null,started:null,finished:null,step:0,wIndex:0};
+let timerHandle=null,timeUpShown=false;
+const $=s=>document.querySelector(s), app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function optFor(item){ const v=S.setup[item.id]; if(v==='custom') return Object.assign({key:'custom',label:(S.custom[item.id]||'').trim()||item.customFallback||'my idea'}, {vars:item.customVars?item.customVars((S.custom[item.id]||'').trim()||item.customFallback||'my idea'):{}}); return (item.options||[]).find(o=>o.key===v); }
+function tokens(){
+  const T={student:S.student};
+  (CONFIG.setup||[]).forEach(it=>{
+    if(it.type==='name'){ T[it.id]=cap((S.setup[it.id]||'').trim())||it.fallback||'Sam'; }
+    else if(it.type==='pron'){ const p=PRONOUNS[S.setup[it.id]||'she']; T.sub=p.sub;T.obj=p.obj;T.pos=p.pos;T.Sub=cap(p.sub);T.Pos=cap(p.pos); }
+    else if(it.type==='text'){ T[it.id]=(S.setup[it.id]||'').trim()||it.fallback||''; }
+    else if(it.type==='cards'){ const o=optFor(it)||(it.options||[])[0]; T[it.id]=o.label; Object.assign(T,o.vars||{}); }
+  });
+  PARTS.forEach((p,i)=>{ if(p.choice){ const k=S.choices[i]; const o=p.choice.opts[k!=null?k:0]; Object.assign(T,o.vars||{}); T['choice'+(i+1)]=o.label; }});
+  if(CONFIG.extraTokens) Object.assign(T,CONFIG.extraTokens(T,S));
+  Object.keys(T).forEach(k=>{ if(typeof T[k]==='string' && !(('Cap_'+k) in T)) T['Cap_'+k]=cap(T[k]); });
+  return T;
+}
+function fill(str){ if(str==null) return ''; const T=tokens(); let out=String(str);
+  for(let pass=0;pass<2;pass++) out=out.replace(/\{(\w+)\}/g,(m,k)=>k in T?(pass===0&&/\{\w+\}/.test(T[k])?T[k]:esc(T[k])):m);
+  return out.replace(/\*(.+?)\*/g,'<em>$1</em>'); }
+function plain(str){ return fill(str).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim(); }
+function toast(m,ms=2600){const d=document.createElement('div');d.className='toast';d.innerHTML=m;document.body.appendChild(d);setTimeout(()=>d.remove(),ms);}
+function burst(x,y){const em=['⭐','🎉','✨','💜','🌟'];for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst';s.textContent=em[i%5];s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',(Math.random()*240-120)+'px');s.style.setProperty('--dy',(Math.random()*-200-40)+'px');document.body.appendChild(s);setTimeout(()=>s.remove(),1000);}}
+function setProgress(f){$('#progress div').style.width=Math.round(f*100)+'%';}
+function updatePills(){$('#stars').textContent='⭐ '+S.stars;$('#hintsPill').textContent='💡 '+S.hintsUsed;}
+function fmt(sec){const a=Math.abs(sec);return Math.floor(a/60)+':'+String(a%60).padStart(2,'0');}
+function elapsed(){ if(!S.started) return 0; return Math.round(((S.finished||Date.now())-S.started)/1000); }
+function tick(){const left=TOTAL_SECONDS-elapsed(),el=$('#timer');
+  if(left>=0){el.textContent='⏱️ '+fmt(left);el.className='pill'+(left<=120?' low':'');}
+  else{el.textContent='⏱️ +'+fmt(left)+' extra';el.className='pill over'; if(!timeUpShown){timeUpShown=true;toast('⏰ 10 minutes are up! Finish the bit you\u2019re on, then head to the end. No rush! 😊',4500);}}}
+function startTimer(){ if(S.started) return; S.started=Date.now(); tick(); timerHandle=setInterval(tick,1000); }
+function stopTimer(){ if(!S.finished) S.finished=Date.now(); clearInterval(timerHandle); tick(); }
+window.addEventListener('beforeunload',e=>{ if(S.started&&!S.finished){e.preventDefault();e.returnValue='';}});
+function block(p){ const s=fill(p.replace(/^!/,'')); return /^\s*</.test(s)?s:`<p class="${p.startsWith('!')?'short':''}">${s}</p>`; }
+function storySoFar(upTo){ let h=''; for(let i=0;i<PARTS.length&&i<upTo;i++){ h+=(PARTS[i].paras||[]).map(block).join(''); if(PARTS[i].choice&&S.choices[i]!=null) h+=`<div class="branch">${fill(PARTS[i].choice.opts[S.choices[i]].text)}</div>`; } if(upTo>=PARTS.length&&CONFIG.reference) h+=`<div class="box">${fill(CONFIG.reference)}</div>`; return h; }
+function rereadDetails(upTo,label){ const h=storySoFar(upTo); return h?`<details style="margin:6px 0 10px"><summary class="muted">📜 ${label||'Re-read'}</summary><div class="reread-panel story">${h}</div></details>`:''; }
+
+/* ---- intro ---- */
+function renderIntro(){ setProgress(0);
+  app.innerHTML=`<div class="card"><span class="tag">${CONFIG.icon} ${esc(CONFIG.subject)} · Quest #${CONFIG.num}</span>
+  <h1>${fill(CONFIG.introHeading)}</h1><p>${fill(CONFIG.introText)}</p>
+  <table class="plan">${CONFIG.plan.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>
+  <p class="muted">⭐ Each right answer earns stars. 💡 Stuck? Press the hint button. Hints are totally allowed (they just mean a slightly smaller score for that question). ⏱️ The timer is a guide, not a race.</p>
+  <label class="q" for="student">Your name</label><input type="text" id="student" value="${esc(S.student)}" maxlength="30">
+  <button class="btn alt" id="goBtn" style="margin-top:16px">🚀 Start my 10-minute quest!</button></div>`;
+  $('#goBtn').onclick=()=>{ S.student=$('#student').value.trim()||'Alexa'; startTimer(); (CONFIG.setup&&CONFIG.setup.length)?renderSetup():startParts(); };
+}
+/* ---- setup ---- */
+function renderSetup(){ setProgress(.05);
+  let h=`<div class="card"><span class="tag">🎨 Step 1 · ${CONFIG.setupTag||'Make it yours'}</span><h2>${fill(CONFIG.setupHeading||'Make it yours, {student}!')}</h2>`;
+  CONFIG.setup.forEach((it,n)=>{ const num=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'][n]||'▶️';
+    h+=`<label class="q">${num} ${it.label}</label>`;
+    if(it.type==='name'||it.type==='text'){ h+=`<input type="text" data-in="${it.id}" placeholder="${esc(it.placeholder||'Type here...')}" maxlength="${it.max||30}" value="${esc(S.setup[it.id]||'')}">`;
+      if(it.ideas) h+=`<div class="chips">${it.ideas.map(x=>`<button class="chip" data-idea="${it.id}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`; }
+    else if(it.type==='pron'){ const v=S.setup[it.id]||'she'; S.setup[it.id]=v; h+=`<div class="chips"><button class="chip ${v==='she'?'sel':''}" data-pron="${it.id}" data-v="she">👧 girl (she/her)</button><button class="chip ${v==='he'?'sel':''}" data-pron="${it.id}" data-v="he">👦 boy (he/him)</button></div>`; }
+    else if(it.type==='cards'){ h+=`<div class="grid">${it.options.map(o=>`<button class="opt ${S.setup[it.id]===o.key?'sel':''}" data-card="${it.id}" data-v="${o.key}"><span class="big">${o.icon}</span>${esc(o.label)}</button>`).join('')}${it.custom?`<button class="opt ${S.setup[it.id]==='custom'?'sel':''}" data-card="${it.id}" data-v="custom"><span class="big">✏️</span>${esc(it.custom)}</button>`:''}</div>`;
+      if(it.custom) h+=`<input type="text" data-cust="${it.id}" placeholder="${esc(it.customPlaceholder||'Type your idea...')}" maxlength="30" value="${esc(S.custom[it.id]||'')}" style="margin-top:8px;display:${S.setup[it.id]==='custom'?'block':'none'}">`; }
+  });
+  h+=`<div><button class="btn alt" id="toParts" style="margin-top:18px">${CONFIG.setupGo||'▶️ Let\u2019s go!'}</button></div><p class="muted" id="setupMsg"></p></div>`;
+  app.innerHTML=h;
+  const keep=()=>{ app.querySelectorAll('[data-in]').forEach(i=>S.setup[i.dataset.in]=i.value); app.querySelectorAll('[data-cust]').forEach(i=>S.custom[i.dataset.cust]=i.value); };
+  app.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{ app.querySelector(`[data-in="${b.dataset.idea}"]`).value=b.dataset.v; keep(); });
+  app.querySelectorAll('[data-pron]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.pron]=b.dataset.v; renderSetup(); });
+  app.querySelectorAll('[data-card]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.card]=b.dataset.v; renderSetup(); if(b.dataset.v==='custom'){ const c=app.querySelector(`[data-cust="${b.dataset.card}"]`); c&&c.focus(); } });
+  $('#toParts').onclick=()=>{ keep(); const miss=[];
+    CONFIG.setup.forEach(it=>{ if((it.type==='name'||it.type==='text')&&!it.optional&&!(S.setup[it.id]||'').trim()) miss.push(it.short||'your answer');
+      if(it.type==='cards'&&(!S.setup[it.id]||(S.setup[it.id]==='custom'&&!(S.custom[it.id]||'').trim()))) miss.push(it.short||'a choice'); });
+    if(miss.length){ $('#setupMsg').innerHTML='👀 Don\u2019t forget '+miss.join(', ')+'!'; return; }
+    CONFIG.setup.forEach(it=>{ if(S.setup[it.id]&&typeof S.setup[it.id]==='string') S.setup[it.id]=S.setup[it.id].trim().replace(/\s+/g,' '); if(S.custom[it.id]) S.custom[it.id]=S.custom[it.id].trim(); });
+    startParts(); };
+}
+/* ---- story / scenario parts ---- */
+function startParts(){ S.step=0; PARTS.length?renderPart():startQuestions(); }
+function renderPart(){ const i=S.step, P=PARTS[i]; setProgress(.1+i*(.35/Math.max(1,PARTS.length)));
+  const title= i===0&&CONFIG.storyTitle?`<h1>${fill(CONFIG.storyTitle)}</h1>`:(P.title?`<h2>${fill(P.title)}</h2>`:'');
+  app.innerHTML=`<div class="card story"><span class="tag">${CONFIG.partTag||'📜 Story'} · Part ${i+1} of ${PARTS.length}</span>${title}${i>0?rereadDetails(i,'Re-read so far'):''}
+    ${(P.paras||[]).map(block).join('')}<div id="branchOut"></div>
+    ${P.choice?`<div class="choice-box" id="choiceBox"><h3>🤔 ${fill(P.choice.q)}</h3><div class="choices">${P.choice.opts.map((o,k)=>`<button class="opt" data-choice="${k}"><span class="big">${o.icon}</span><span>${fill(o.label)}</span></button>`).join('')}</div></div>`:`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`}
+  </div>`;
+  window.scrollTo(0,0);
+  const next=()=>{ if(i<PARTS.length-1){S.step++;renderPart();} else startQuestions(); };
+  if(!P.choice){ $('#nextPart').onclick=next; return; }
+  app.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.choice; S.choices[i]=k;
+    app.querySelectorAll('[data-choice]').forEach(x=>{x.disabled=true;x.classList.toggle('sel',x===b);});
+    const out=$('#branchOut'); out.innerHTML=`<div class="branch">${fill(P.choice.opts[k].text)}</div>`+(P.after?(P.after.map(block).join('')):'')+`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`;
+    $('#choiceBox').after(out); $('#nextPart').onclick=next; $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- MCQs ---- */
+function getQS(){ if(CONFIG.questionSets){ const k=S.setup[CONFIG.questionSetBy]; return CONFIG.questionSets[k]||Object.values(CONFIG.questionSets)[0]; } return CONFIG.questions; }
+function startQuestions(){ QS=getQS(); S.qIndex=0; renderQuestion(); }
+function renderQuestion(){ const qi=S.qIndex,Q=QS[qi]; setProgress(.46+qi*(.4/QS.length));
+  const a=S.answers[qi]||(S.answers[qi]={hint:false,choice:null});
+  app.innerHTML=`<div class="card"><span class="tag">${Q.icon||'❓'} Question ${qi+1} of ${QS.length} · ${esc(Q.skill)}</span>
+    ${Q.context?`<div class="ctx">${fill(Q.context)}</div>`:''}<h2>${fill(Q.q)}</h2>
+    <div class="answers">${Q.opts.map((o,k)=>`<button class="ans" data-ans="${k}"><b class="letter">${'ABCD'[k]}</b><span>${fill(o.t)}</span></button>`).join('')}</div>
+    <div id="hintArea">${a.hint?`<div class="hintbox">💡 ${fill(Q.hint)}</div>`:''}</div><div id="fb"></div>
+    <div><button class="btn ghost" id="hintBtn" ${a.hint?'disabled':''}>💡 ${a.hint?'Hint used':'Show a hint'}</button>${(PARTS.length||CONFIG.reference)?'<button class="btn ghost" id="rereadBtn">📜 Re-read</button>':''}</div><div id="rereadPanel"></div></div>`;
+  window.scrollTo(0,0);
+  const rb=$('#rereadBtn'); if(rb) rb.onclick=()=>{const p=$('#rereadPanel'); p.innerHTML=p.innerHTML?'':`<div class="reread-panel story">${storySoFar(PARTS.length)}</div>`;};
+  $('#hintBtn').onclick=()=>{ if(a.hint||a.choice!=null) return; a.hint=true; S.hintsUsed++; updatePills(); $('#hintArea').innerHTML=`<div class="hintbox">💡 ${fill(Q.hint)}</div>`; $('#hintBtn').disabled=true; $('#hintBtn').textContent='💡 Hint used'; };
+  app.querySelectorAll('[data-ans]').forEach(b=>b.onclick=ev=>{ if(a.choice!=null) return; const k=+b.dataset.ans,o=Q.opts[k]; a.choice=k; a.correct=!!o.ok; a.points=o.ok?(a.hint?1:2):0; S.stars+=a.points; updatePills();
+    app.querySelectorAll('[data-ans]').forEach((x,j)=>{x.disabled=true; if(Q.opts[j].ok) x.classList.add('right');}); if(!o.ok) b.classList.add('wrong'); $('#hintBtn').disabled=true;
+    const right=Q.opts.find(x=>x.ok);
+    $('#fb').innerHTML=`<div class="feedback ${o.ok?'good':'bad'}">${o.ok?(a.hint?'✅ Correct, with a hint! +1 ⭐':'🎉 Correct! +2 ⭐'):'❌ Not this time, but now you know!'}<br>${fill(o.fb)}${o.ok?'':`<br><b>The best answer:</b> ${fill(right.t)}<br>${fill(right.fb)}`}</div>
+      <button class="btn alt" id="nextQ">${qi<QS.length-1?'➡️ Next question':(WRITTEN.length?'📝 On to the last part!':'🏁 See my results')}</button>`;
+    if(o.ok) burst(ev.clientX||200,ev.clientY||300);
+    $('#nextQ').onclick=()=>{ if(qi<QS.length-1){S.qIndex++;renderQuestion();} else { S.wIndex=0; WRITTEN.length?renderWritten():finishScreen(); } };
+    $('#nextQ').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- written / creative / ratings ---- */
+function countSentences(t){ t=t.trim(); if(!t) return 0; return (t.match(/[^.!?。！？]+[.!?。！？]+/g)||[]).filter(s=>s.trim().length>1).length + (/[^.!?。！？\s]\s*$/.test(t)?1:0); }
+function countWords(t){ t=t.trim(); if(!t) return 0; const cjk=(t.match(/[\u3400-\u9fff]/g)||[]).length; const lat=t.replace(/[\u3400-\u9fff]/g,' ').trim(); return cjk+(lat?lat.split(/\s+/).length:0); }
+function clues(W,t){ if(!W.clueWords) return []; const low=' '+t.toLowerCase()+' '; return [...new Set(fill(W.clueWords.join('|')).toLowerCase().split('|').filter(w=>w&&low.includes(w)))]; }
+function renderWritten(){ const wi=S.wIndex, W=WRITTEN[wi], last=wi===WRITTEN.length-1; setProgress(.88+wi*.04);
+  let h=`<div class="card"><span class="tag">${W.tag||'📝 Your turn'}</span><h2>${fill(W.title)}</h2>${W.context?`<div class="ctx">${fill(W.context)}</div>`:''}<p>${fill(W.prompt)}</p>`;
+  if(W.type==='ratings'){ const R=S.ratings[W.id]||(S.ratings[W.id]={});
+    h+=W.items.map(it=>`<div class="rate"><span class="lbl">${fill(it.label)}</span><span class="chips">${[1,2,3,4].map(v=>`<button class="chip ${R[it.key]==v?'sel':''}" data-rate="${it.key}" data-v="${v}">${(W.scale||['🌱 1','🌿 2','🌳 3','🌟 4'])[v-1]}</button>`).join('')}</span></div>`).join('');
+  } else if(W.type==='pick'){ h+=`<div class="grid">${W.options.map(o=>`<button class="opt ${S.picks[W.id]===o.key?'sel':''}" data-pick="${o.key}"><span class="big">${o.icon}</span>${fill(o.label)}</button>`).join('')}</div>`;
+    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(plain(W.placeholder||'Type here...'))}">${esc(S.written[W.id]||'')}</textarea>`;
+  } else {
+    if(W.starters) h+=`<p class="muted">Tap a starter to add it:</p><div class="chips">${W.starters.map(s=>`<button class="chip" data-start="${esc(fill(s))}">${fill(s)}</button>`).join('')}</div>`;
+    h+=`<textarea id="wtext" placeholder="${esc(plain(W.placeholder||'Type here...'))}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
+    if(W.sketch) h+=`<details style="margin-top:10px" ${W.sketchOpen?'open':''}><summary><b>🖍️ Sketch pad (optional)</b> · draw with your finger or mouse</summary><canvas class="sketch" id="sk" width="700" height="260"></canvas>
+      <div class="chips">${['#2d2a4a','#e2483d','#ff9f1c','#ffd23f','#22a06b','#4cc9f0','#7b5cff','#ff5d8f'].map(c=>`<button class="chip" data-col="${c}" style="background:${c};width:34px;height:34px;padding:0"></button>`).join('')}<button class="chip" id="skClear">🧽 Clear</button><a class="chip" id="skSave" download="sketch-session-${CONFIG.num}.png" href="#">💾 Save picture</a></div></details>`;
+  }
+  if(PARTS.length||CONFIG.reference) h+=rereadDetails(PARTS.length,'Re-read');
+  if(last) h+=`<label class="q">🌡️ How did today's quest feel?</label><div class="conf">${[['1','🌱','Tricky!'],['2','🌿','OK-ish'],['3','🌳','Pretty good'],['4','🌟','Easy-peasy!']].map(c=>`<button class="opt ${S.confidence===c[0]?'sel':''}" data-conf="${c[0]}"><span class="big">${c[1]}</span>${c[0]} · ${c[2]}</button>`).join('')}</div>`;
+  h+=`<button class="btn alt" id="wNext" style="margin-top:16px">${last?'🏁 Finish &amp; see my results':'➡️ Next'}</button><p class="muted" id="wMsg"></p></div>`;
+  app.innerHTML=h; window.scrollTo(0,0);
+  const ta=$('#wtext');
+  const upd=()=>{ if(!ta) return; S.written[W.id]=ta.value; const st=$('#wstats'); if(!st) return; const c=clues(W,ta.value), n=countSentences(ta.value);
+    st.innerHTML=`<span>✍️ ${countWords(ta.value)} words</span><span>📏 ${n} sentence${n===1?'':'s'}${W.sentences?(n>=W.sentences[0]?' ✅':` (aim for ${W.sentences[0]}${W.sentences[1]!==W.sentences[0]?'–'+W.sentences[1]:''})`):''}</span>${W.clueWords?`<span>${W.clueLabel||'🔍 Key words'}: ${c.length?esc(c.join(', ')):'none yet'}</span>`:''}`; };
+  if(ta){ ta.oninput=upd; upd(); }
+  app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{ const s=b.dataset.start.replace(/\.\.\.$|…$/,' '); ta.value=ta.value.trim()?ta.value.replace(/\s*$/,'')+' '+s:s; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); upd(); });
+  app.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{ S.ratings[W.id][b.dataset.rate]=+b.dataset.v; app.querySelectorAll(`[data-rate="${b.dataset.rate}"]`).forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ S.picks[W.id]=b.dataset.pick; app.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-conf]').forEach(b=>b.onclick=()=>{ S.confidence=b.dataset.conf; app.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  const cv=$('#sk'); if(cv){ const ctx=cv.getContext('2d'); let col='#2d2a4a',down=false; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round';
+    const pos=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+    cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y);ctx.strokeStyle=col;S.sketched[W.id]=true;};
+    cv.onpointermove=e=>{if(!down)return;const [x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke();}; cv.onpointerup=()=>down=false;
+    app.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>col=b.dataset.col); $('#skClear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);S.sketched[W.id]=false;};
+    $('#skSave').onclick=()=>{ $('#skSave').href=cv.toDataURL('image/png'); }; }
+  $('#wNext').onclick=()=>{ if(ta) S.written[W.id]=ta.value;
+    if(W.type==='ratings'){ const miss=W.items.filter(it=>!S.ratings[W.id][it.key]); if(miss.length){ $('#wMsg').textContent='🌡️ Rate every line first ('+miss.length+' to go).'; return; } }
+    else if(W.type==='pick'){ if(!S.picks[W.id]){ $('#wMsg').textContent='👆 Pick one first!'; return; } if(W.followUp&&countWords(ta.value)<(W.minWords||3)){ $('#wMsg').textContent='✍️ Add a few words to explain.'; return; } }
+    else if(countWords(ta.value)<(W.minWords||5)){ $('#wMsg').textContent='✍️ Write a little more first (at least '+(W.minWords||5)+' words)!'; return; }
+    if(last&&!S.confidence){ $('#wMsg').textContent='🌡️ Pick how the quest felt (1–4).'; return; }
+    if(last) finishScreen(); else { S.wIndex++; renderWritten(); } };
+}
+/* ---- scoring & results ---- */
+function skillScores(){ const sk={}; QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const s=sk[Q.skill]=sk[Q.skill]||{pts:0,hints:0,correct:0,n:0,icon:Q.icon,crit:Q.crit};
+  s.pts+=a.points||0; s.hints+=a.hint?1:0; s.correct+=a.correct?1:0; s.n++; });
+  Object.values(sk).forEach(v=>v.level=Math.max(1,Math.min(4,Math.round(v.pts/(2*v.n)*4)))); return sk; }
+const LEVELS={1:'🌱 Beginning',2:'🌿 Developing',3:'🌳 Secure',4:'🌟 Extending'};
+const lvlWord=l=>LEVELS[l]?LEVELS[l].replace(/^\S+ /,''):'';
+function setupLines(){ const L=[]; (CONFIG.setup||[]).forEach(it=>{ let v;
+  if(it.type==='pron') v=S.setup[it.id]==='he'?'boy (he/him)':'girl (she/her)';
+  else if(it.type==='cards'){ const o=optFor(it); v=o?o.label+(S.setup[it.id]==='custom'?' (own idea)':''):'-'; }
+  else v=(S.setup[it.id]||'').trim()||'-';
+  L.push(`${plain(it.resultLabel||it.label)}: ${v}`); }); return L; }
+function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()), L=[];
+  L.push(`${S.student.toUpperCase()}'S RESULTS · Session ${String(CONFIG.num).padStart(2,'0')} · ${CONFIG.title} (${CONFIG.subject} diagnostic)`);
+  L.push(`Date: ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+  L.push(`Time taken: ${fmt(elapsed())} (target ${fmt(TOTAL_SECONDS)})`);
+  L.push(`Stars: ${S.stars}/${QS.length*2} · Questions correct: ${S.answers.filter(a=>a&&a.correct).length}/${QS.length} · Hints used: ${S.hintsUsed}`);
+  if((CONFIG.setup||[]).length||PARTS.some(p=>p.choice)){ L.push('','--- MY CHOICES ---'); L.push(...setupLines());
+    PARTS.forEach((p,i)=>{ if(p.choice) L.push(`Choice ${i+1}: ${plain(p.choice.q)} -> ${S.choices[i]!=null?plain(p.choice.opts[S.choices[i]].label):'(none)'}`); }); }
+  L.push('','--- QUESTIONS ---');
+  QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const ans=a.choice!=null?`${'ABCD'[a.choice]}. ${plain(Q.opts[a.choice].t)}`:'(not answered)'; const r=Q.opts.findIndex(o=>o.ok);
+    L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[r]}`}`); });
+  L.push('','--- SKILL SCORES (1-4) ---');
+  Object.entries(sk).forEach(([k,v])=>L.push(`${k}${v.crit?' [MYP '+v.crit+']':''}: ${v.level}/4 ${lvlWord(v.level)} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
+  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${plain(W.skillLabel||W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
+  WRITTEN.forEach(W=>{ L.push('',`--- ${plain(W.resultLabel||W.title).toUpperCase()} ---`);
+    if(W.type==='ratings'){ W.items.forEach(it=>L.push(`${plain(it.label)}: ${S.ratings[W.id]&&S.ratings[W.id][it.key]||'-'}/4`)); }
+    else if(W.type==='pick'){ const o=W.options.find(o=>o.key===S.picks[W.id]); L.push(`Picked: ${o?plain(o.label):'-'}`); if(W.followUp) L.push(`${plain(W.followUp)} ${(S.written[W.id]||'').trim()}`); }
+    else { const t=(S.written[W.id]||'').trim(); L.push(t); const c=clues(W,t); L.push(`(${countWords(t)} words, ${countSentences(t)} sentences${W.clueWords?', key words: '+(c.join(', ')||'none'):''}${W.sketch?', sketch drawn: '+(S.sketched[W.id]?'yes (saved separately)':'no'):''})`); } });
+  L.push('',`How the quest felt (1-4): ${S.confidence} ${lvlWord(S.confidence)}`);
+  return L.join('\n'); }
+function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), txt=resultsText();
+  const subj=`Session ${String(CONFIG.num).padStart(2,'0')} results: ${S.student} – ${CONFIG.title}`;
+  let mailBody=txt; if(mailBody.length>1800) mailBody=Array.from(mailBody).slice(0,1800).join('')+'\n...(cut short - please also paste the full results from "Copy my results")';
+  const mail=`mailto:${EMAIL_TO}?cc=${encodeURIComponent(EMAIL_CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mailBody)}`;
+  app.innerHTML=`<div class="card"><span class="tag">🏆 Quest complete!</span><h1>${fill(CONFIG.finishHeading||'Amazing work, {student}! 🎉')}</h1>
+    <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
+    <h2 style="margin-top:18px">Your skill scores</h2>
+    ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon||''} ${esc(k)}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div><div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div><div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
+    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(plain(W.skillLabel||W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
+    <h2 style="margin-top:18px">📋 Send your results</h2><p>Tap <b>Copy my results</b>, then paste into an email to Mum, or tap <b>Open in email</b>.</p>
+    <button class="btn alt" id="copyBtn">📋 Copy my results</button><a class="btn ghost" id="mailBtn" href="${mail}">✉️ Open in email</a><p class="muted" id="copyMsg"></p>
+    <pre id="resultText">${esc(txt)}</pre><button class="btn ghost" id="again">🔁 Play again (new choices)</button></div>`;
+  window.scrollTo(0,0); burst(innerWidth/2,200);
+  $('#copyBtn').onclick=async()=>{ let ok=false; try{ if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(txt);ok=true;} }catch(e){}
+    if(!ok){ const t=document.createElement('textarea'); t.value=txt; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); try{ok=document.execCommand('copy');}catch(e){} t.remove(); }
+    $('#copyMsg').innerHTML=ok?'✅ Copied! Now paste it into an email or message to Mum.':'⚠️ Couldn\u2019t copy automatically. Press and hold the text below, choose "Select all" and then "Copy".'; };
+  $('#again').onclick=()=>{ if(confirm('Start again? (Copy your results first!)')) location.reload(); };
+}
+/* ---- self-test helper (used by automated checks only) ---- */
+window.__selfTest=function(){ const bad=new Set(), saved=JSON.stringify(S); const setup=CONFIG.setup||[];
+  const combos=[{}]; setup.forEach(it=>{ let vals=[]; if(it.type==='pron') vals=['she','he']; else if(it.type==='cards') vals=it.options.map(o=>o.key).concat(it.custom?['custom']:[]); else vals=['Testname'];
+    const n=[]; combos.forEach(c=>vals.forEach(v=>n.push(Object.assign({},c,{[it.id]:v})))); combos.splice(0,combos.length,...n.slice(0,400)); });
+  const maxC=Math.max(1,...PARTS.map(p=>p.choice?p.choice.opts.length:1));
+  combos.forEach(c=>{ S.setup=c; setup.forEach(it=>{ if(it.type==='cards') S.custom[it.id]='test idea'; });
+    QS=getQS(); for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
+      let all=[CONFIG.storyTitle,CONFIG.reference,CONFIG.setupHeading,CONFIG.finishHeading]; PARTS.forEach(p=>{ all.push(...(p.paras||[]),...(p.after||[]),p.title); if(p.choice){ all.push(p.choice.q); p.choice.opts.forEach(o=>all.push(o.label,o.text)); } });
+      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.skillLabel,W.resultLabel,W.placeholder,W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
+      all.forEach(s=>{ if(s){ const m=fill(s).match(/\{\w+\}/g); if(m) m.forEach(x=>bad.add(x)); } }); } });
+  Object.assign(S,JSON.parse(saved));
+  const sets=CONFIG.questionSets?Object.values(CONFIG.questionSets):[CONFIG.questions]; const pos=sets.map(qs=>qs.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join('')).join('/'); const multi=[].concat(...sets).filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length; QS=getQS();
+  const _unused=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); 
+  return {leftover:[...bad], combos:combos.length, positions:pos, badOk:multi}; };
+$('#hdrTitle').textContent=`${CONFIG.icon} ${CONFIG.title} · Session ${String(CONFIG.num).padStart(2,'0')}`;
+document.title=`Session ${CONFIG.num} · ${CONFIG.title}`;
+renderIntro(); updatePills();
+</script>
+</body>
+</html>
