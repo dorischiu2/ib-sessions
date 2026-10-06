@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 2 · Escape Room Maths</title>
+<style>
+  :root{--bg1:#ffecd2;--bg2:#fcb69f;--ink:#2d2a4a;--card:#fff;--pri:#7b5cff;--pri2:#5a3de0;--ok:#22a06b;--okbg:#e3fcef;--bad:#e2483d;--badbg:#ffebe9;--warn:#ff9f1c;--sky:#4cc9f0;--pink:#ff5d8f;--yellow:#ffd23f}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Trebuchet MS","Segoe UI","Noto Sans",system-ui,-apple-system,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;font-size:18px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(45,42,74,.95);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  header .title{font-weight:bold;flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+  #timer.low{background:var(--warn);color:#2d2a4a} #timer.over{background:var(--pink)}
+  #progress{height:6px;background:rgba(255,255,255,.4)} #progress div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--pri),var(--pink));transition:width .5s}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .card{background:var(--card);border-radius:22px;padding:20px 20px 22px;margin:14px 0;box-shadow:0 8px 24px rgba(90,61,224,.15);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.97) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-size:28px;margin:4px 0 8px;color:var(--pri2)} h2{font-size:22px;margin:4px 0 10px;color:var(--pri2)} h3{margin:8px 0}
+  .muted{color:#6b6790;font-size:15px}
+  .tag{display:inline-block;font-size:13px;font-weight:bold;padding:2px 10px;border-radius:999px;background:#efeaff;color:var(--pri2);margin-bottom:6px}
+  label.q{display:block;font-weight:bold;margin:16px 0 6px}
+  input[type=text],textarea{width:100%;font:inherit;padding:10px 12px;border:3px solid #ddd6ff;border-radius:14px;outline:none;background:#fbfaff}
+  input[type=text]:focus,textarea:focus{border-color:var(--pri)} textarea{min-height:140px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{border:2px solid #ddd6ff;background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+  .chip:hover,.chip.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .opt{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:18px;padding:12px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+  .opt .big{font-size:32px;display:block} .opt:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .opt.sel{border-color:var(--pri);background:#f3efff;box-shadow:0 0 0 3px rgba(123,92,255,.25)}
+  .btn{display:inline-block;border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:bold;cursor:pointer;background:linear-gradient(180deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 4px 0 #3f2aa8;margin:6px 6px 0 0;text-decoration:none}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:linear-gradient(180deg,#ffe066,#ffc300);color:var(--ink);box-shadow:0 4px 0 #c99700}
+  .btn.ghost{background:#fff;color:var(--pri2);border:2px solid #ddd6ff;box-shadow:none}
+  .story p{margin:0 0 12px;font-size:19px} .story p.short{font-weight:bold;font-size:21px;color:var(--pink)}
+  .branch{background:#fff8e1;border-left:5px solid var(--yellow);padding:8px 12px;border-radius:8px;margin:0 0 12px}
+  .story em{color:#1d5fa8}
+  .box{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:10px 0;font-size:17px}
+  .box table,.ctx table{border-collapse:collapse;width:100%;font-size:16px;margin:6px 0}
+  .box td,.box th,.ctx td,.ctx th{border:1px solid #cfd8e3;padding:5px 8px;text-align:left}
+  .box th,.ctx th{background:#eaf4ff}
+  .ctx{background:#f3faff;border:2px solid #cdeefc;border-radius:14px;padding:10px 14px;margin:8px 0 4px;font-size:17px}
+  .choice-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#e0f7ff,#f3efff)}
+  .choice-box h3{margin:0 0 10px;font-size:19px} .choices{display:grid;gap:10px}
+  .choices .opt{text-align:left;display:flex;gap:10px;align-items:center} .choices .opt .big{font-size:26px;display:inline}
+  .answers{display:grid;gap:10px;margin-top:12px}
+  .ans{border:3px solid #ece8ff;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;font:inherit;text-align:left;cursor:pointer;display:flex;gap:10px}
+  .ans b.letter{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:#efeaff;color:var(--pri2)}
+  .ans:hover:not(:disabled){border-color:var(--sky)} .ans.right{border-color:var(--ok);background:var(--okbg)} .ans.wrong{border-color:var(--bad);background:var(--badbg)}
+  .ans:disabled,.opt:disabled{cursor:default;color:var(--ink);opacity:1} .choices .opt:disabled:not(.sel){opacity:.55}
+  .feedback{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:17px;animation:pop .3s}
+  .feedback.good{background:var(--okbg);border:2px solid var(--ok)} .feedback.bad{background:var(--badbg);border:2px solid var(--bad)}
+  .hintbox{margin-top:12px;padding:10px 14px;border-radius:14px;background:#fff8e1;border:2px dashed var(--warn);font-size:16px}
+  .reread-panel{margin-top:10px;max-height:320px;overflow:auto;border:2px solid #ece8ff;border-radius:14px;padding:12px;background:#fdfcff}
+  .reread-panel p{font-size:16px;margin:0 0 8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px} .stats span{background:#efeaff;border-radius:999px;padding:4px 12px;font-size:15px}
+  .skill{margin:10px 0} .skill .row{display:flex;justify-content:space-between;gap:8px;font-weight:bold;flex-wrap:wrap}
+  .bar{height:16px;border-radius:999px;background:#eee;overflow:hidden;margin-top:4px} .bar div{height:100%;border-radius:999px}
+  .lvl1{background:#ff8fa3}.lvl2{background:#ffc300}.lvl3{background:#4cc9f0}.lvl4{background:#22a06b}
+  pre#resultText{white-space:pre-wrap;word-break:break-word;background:#fbfaff;border:2px solid #ece8ff;border-radius:14px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;z-index:50;font-weight:bold;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:pop .3s;max-width:90%;text-align:center}
+  .burst{position:fixed;pointer-events:none;font-size:28px;z-index:60;animation:fly 1s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+  .conf{display:flex;gap:8px;flex-wrap:wrap} .conf .opt{flex:1;min-width:120px}
+  .plan{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px} .plan td{padding:6px 8px;border-bottom:1px dashed #ddd}
+  .rate{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #e5e0ff;flex-wrap:wrap}
+  .rate .lbl{flex:1;min-width:160px} .rate .chips{margin-top:0}
+  canvas.sketch{width:100%;height:260px;border:3px dashed #ddd6ff;border-radius:14px;background:#fff;touch-action:none;display:block;margin-top:8px}
+  details summary{cursor:pointer}
+  @media (max-width:520px){body{font-size:17px} h1{font-size:24px} .story p{font-size:18px} header .title{font-size:13px} header{gap:6px;padding:8px 10px} .pill{font-size:14px;padding:3px 9px}}
+</style>
+</head>
+<body>
+<header><div class="title" id="hdrTitle"></div><div class="pill" id="stars">⭐ 0</div><div class="pill" id="hintsPill">💡 0</div><div class="pill" id="timer">⏱️ 10:00</div></header>
+<div id="progress"><div></div></div>
+<main id="app"></main>
+<script>
+/* ===== SESSION CONTENT (original, written for Alexa) ===== */
+const CONFIG = {
+  num:2, subject:'Mathematics', icon:'🔢', title:'Escape Room Maths',
+  introHeading:'Hi {student}! Can you escape the Maths Escape Room? 🔐',
+  introText:'You and a partner are locked in a mysterious room. Eight number locks stand between you and freedom: fractions, negative numbers, ratio and real-life puzzles. Crack them all, then explain the final lock like a true maths detective!',
+  plan:[['🎨 Choose your escape room','~1 min'],['🔐 Read the mission','~1 min'],['🔢 8 lock puzzles','~5 min'],['📝 Explain the final lock','~2½ min']],
+  setupHeading:'Design your escape room, {student}!',
+  setup:[
+    {id:'Name', type:'name', label:'Name your escape-room partner', ideas:['Max','Lily','Kai','Ruby','Leo'], fallback:'Max', short:'a partner name', resultLabel:'Partner'},
+    {id:'pron', type:'pron', label:'Is your partner a...'},
+    {id:'theme', type:'cards', label:'Where are you locked in?', short:'a room', resultLabel:'Escape room', custom:'Somewhere else', customPlaceholder:'e.g. a haunted library',
+     options:[
+      {key:'pirate', icon:'🏴‍☠️', label:'Pirate Ship', vars:{place:'the creaky pirate ship *Salty Dumpling*', item:'gold coins', guard:'a grumpy parrot'}},
+      {key:'space', icon:'🚀', label:'Space Station', vars:{place:'Space Station Orion, far above the Earth', item:'energy crystals', guard:'a beeping robot'}},
+      {key:'mtr', icon:'🚇', label:'Secret MTR Station', vars:{place:'a secret MTR station hidden deep under Central', item:'golden tokens', guard:'a talking ticket machine'}},
+      {key:'dimsum', icon:'🥟', label:'Dim Sum Palace', vars:{place:'the kitchen of the Golden Dragon Dim Sum Palace', item:'har gow dumplings', guard:'a very strict head chef'}}],
+     customVars:t=>({place:t, item:'treasure tokens', guard:'a mysterious guard'})}
+  ],
+  setupGo:'🔐 Enter the escape room!',
+  partTag:'🔐 Mission',
+  storyTitle:'Locked In!',
+  parts:[
+    {paras:[
+      '!CLICK.',
+      'The door slams shut behind you and {Name}. You are locked inside {place}, and {guard} is guarding the only exit.',
+      '"Eight number locks stand between you and freedom," says {guard}. "Solve them all. You may ask for hints... but they cost stars!"',
+      'On a dusty table sits a pile of {item}. {Name} grins. "We can do this. Where do we start?"'],
+     choice:{q:'Where do you start?', opts:[
+      {icon:'🗝️', label:'Search for a secret clue', text:'Under a loose floorboard you find a crumpled note: *Read every question twice. Show your working. Always.* Useful advice!'},
+      {icon:'🗺️', label:'Study the map on the wall', text:'The map shows eight locks in a ring. In the middle is one more, the FINAL lock, with a sign: *Explain your answer or stay here forever.*'},
+      {icon:'🤝', label:'Make a deal with the guard', text:'{Cap_guard} thinks for a moment. "Fine. Solve my last puzzle AND explain it clearly, and I\u2019ll open the door myself."'}]},
+     after:['{Name} cracks {pos} knuckles. "Lock number one. Let\u2019s go!"']}
+  ],
+  reference:'<b>🔐 Mission notes:</b> 8 locks: fractions, negative numbers, ratio, real-life problems. Then the FINAL lock: solve it and explain every step.',
+  questions:[
+    {skill:'Fractions & decimals', crit:'A', icon:'🍕', q:'Lock 1: "Type in <b>¾ of 24</b> {item}." What number opens the lock?',
+     opts:[{t:'6', fb:'6 is <b>¼</b> of 24 (24 ÷ 4). Great start, but you need <b>three</b> quarters, so multiply by 3.'},
+           {t:'32', fb:'¾ of something is <i>less</i> than the whole thing, so it must be smaller than 24.'},
+           {t:'18', ok:true, fb:'Yes! 24 ÷ 4 = 6 (that\u2019s one quarter), and 6 × 3 = 18. 🔓'},
+           {t:'21', fb:'Not quite. Try: divide by the bottom number (4), then multiply by the top number (3).'}],
+     hint:'To find ¾: first find ¼ (divide by 4), then multiply by 3.', gap:'6 = found ¼ only; 32 = thinks fractions make numbers bigger.'},
+    {skill:'Fractions & decimals', crit:'A', icon:'🍕', q:'Lock 2: "Press the <b>biggest</b> number to open me!"',
+     opts:[{t:'⅝', ok:true, fb:'Brilliant! ⅝ = 5 ÷ 8 = 0.625, which is bigger than 0.6 and 0.58. 🔓'},
+           {t:'0.6', fb:'0.6 is big, but ⅝ = 0.625 is a tiny bit bigger. Turn every number into a decimal to compare.'},
+           {t:'⅗', fb:'Trick! ⅗ = 0.6, exactly the same as 0.6, and ⅝ = 0.625 is bigger.'},
+           {t:'0.58', fb:'0.58 is the <i>smallest</i> here. Careful: 0.58 is less than 0.60.'}],
+     hint:'Change them all into decimals: ⅝ = 5 ÷ 8 and ⅗ = 3 ÷ 5. Then compare.', gap:'Choosing 0.58 suggests the "longer decimal = bigger" misconception.'},
+    {skill:'Negative numbers', crit:'A', icon:'🌡️', q:'Lock 3: The freezer room is <b>−8°C</b>. The heater makes it <b>13°C warmer</b>. What is the new temperature?',
+     opts:[{t:'−21°C', fb:'That would be 13 degrees <i>colder</i>. "Warmer" means move <b>up</b> the number line.'},
+           {t:'−5°C', fb:'Close! From −8, going up 8 gets you to 0, and you still have 5 more to go.'},
+           {t:'21°C', fb:'That\u2019s 8 + 13, which ignores the minus sign. Start at −8 on the number line.'},
+           {t:'5°C', ok:true, fb:'Yes! −8 + 13: up 8 to reach 0, then 5 more = 5°C. 🔓'}],
+     hint:'Picture a thermometer. Start at −8 and count UP 13. How many steps to reach 0? How many are left?', gap:'−5 or 21 = sign errors when crossing zero.'},
+    {skill:'Negative numbers', crit:'A', icon:'🌡️', q:'Lock 4: "Put the numbers in order from <b>smallest to largest</b>: −3, 2, −7, 0"',
+     opts:[{t:'−3, −7, 0, 2', fb:'Careful: −7 is <i>smaller</i> than −3 (it\u2019s colder!). The further below zero, the smaller.'},
+           {t:'−7, −3, 0, 2', ok:true, fb:'Perfect! On a number line, −7 is furthest left, then −3, then 0, then 2. 🔓'},
+           {t:'0, −3, −7, 2', fb:'Zero is bigger than any negative number. Try sketching a number line.'},
+           {t:'2, 0, −3, −7', fb:'That\u2019s largest to smallest. The lock wants smallest first!'}],
+     hint:'Think of temperatures: which is coldest, −3°C or −7°C? Coldest = smallest.', gap:'Picking A = treats −7 as "bigger" than −3 (a very common Year 7 slip).'},
+    {skill:'Ratio & proportion', crit:'A', icon:'⚖️', q:'Lock 5: Share <b>20 {item}</b> between you and {Name} in the ratio <b>3 : 2</b> (you get the 3 part). How many do <b>you</b> get?',
+     opts:[{t:'12', ok:true, fb:'Yes! 3 + 2 = 5 parts. 20 ÷ 5 = 4 per part. You get 3 × 4 = 12 and {Name} gets 8. 🔓'},
+           {t:'8', fb:'That\u2019s {Name}\u2019s share (2 parts). You get the 3 parts.'},
+           {t:'15', fb:'Hmm, 15 + ? = 20 doesn\u2019t split in a 3 : 2 way. Add the parts first: 3 + 2 = 5.'},
+           {t:'10', fb:'10 would be sharing equally (1 : 1). With 3 : 2, you get a bit more.'}],
+     hint:'Add the ratio parts (3 + 2). Divide 20 by that to find one part. Then multiply by 3.', gap:'8 = mixed up whose share; 10 = ignores ratio.'},
+    {skill:'Ratio & proportion', crit:'A', icon:'⚖️', q:'Lock 6: The glow-potion recipe uses <b>2 cups of water for every 5 drops</b> of glow-juice. How many drops for <b>6 cups</b> of water?',
+     opts:[{t:'11', fb:'That adds instead of multiplies. 6 cups is 3 times as much as 2 cups, so you need 3 times the drops.'},
+           {t:'9', fb:'Hmm, 6 + 3? Ratios scale by <b>multiplying</b>. 2 cups × 3 = 6 cups.'},
+           {t:'15', ok:true, fb:'Spot on! 2 cups → 6 cups is × 3, so 5 drops × 3 = 15 drops. 🔓'},
+           {t:'30', fb:'That\u2019s 5 × 6. But the recipe is per <b>2</b> cups, not per 1 cup.'}],
+     hint:'How many times bigger is 6 cups than 2 cups? Do the same to the drops.', gap:'11 or 9 = additive thinking (very common, important to fix before algebra).'},
+    {skill:'Real-life problems', crit:'D', icon:'🧩', q:'Lock 7: Escape tickets cost <b>$35</b> each. You have <b>$200</b>. What is the greatest number of tickets you can buy, and how much change do you get?',
+     opts:[{t:'6 tickets, $10 change', fb:'6 × $35 = $210, which is more than $200, so you can\u2019t afford 6.'},
+           {t:'5 tickets, $25 change', ok:true, fb:'Yes! 5 × $35 = $175, and $200 − $175 = $25 change. 🔓'},
+           {t:'5 tickets, $15 change', fb:'5 tickets is right, but check the change: $200 − $175 = ?'},
+           {t:'4 tickets, $60 change', fb:'4 × $35 = $140, leaving $60. That\u2019s enough for one more ticket!'}],
+     hint:'Count up in 35s: 35, 70, 105... Stop before you go past 200. Then subtract.', gap:'C = calculation slip in the second step; A = didn\u2019t check the answer is affordable.'},
+    {skill:'Real-life problems', crit:'D', icon:'🧩', q:'Lock 8: You entered at <b>2:45 pm</b>. The doors lock forever at <b>4:10 pm</b>. How many <b>minutes</b> do you have?',
+     opts:[{t:'65', fb:'That\u2019s 410 − 345 as if time were normal numbers, but an hour has 60 minutes, not 100!'},
+           {t:'125', fb:'Too many! 2:45 to 3:45 is 60 minutes. How much more to 4:10?'},
+           {t:'75', fb:'Close! 2:45 → 3:45 = 60 min, then 3:45 → 4:10 = 25 min. Add them.'},
+           {t:'85', ok:true, fb:'Correct! 2:45 → 3:45 is 60 minutes, and 3:45 → 4:10 is 25 more: 85 minutes. 🔓'}],
+     hint:'Jump in steps: 2:45 → 3:45 (one hour = 60 min) → 4:10 (how many more minutes?).', gap:'65 = subtracting times like decimals.'}
+  ],
+  written:[
+    {id:'final', tag:'📝 The FINAL lock', title:'Solve it AND explain it! 🗝️', marked:true, skillLabel:'Explaining my working', crit:'C',
+     context:'{Cap_guard} says: "I had <b>60 {item}</b>. I gave away <b>⅓</b> of them. Then I gave away <b>25%</b> of what was left. How many do I have now?"',
+     prompt:'Write the answer <b>and</b> explain each step so clearly that {Name} could follow it. Use numbers and words.',
+     starters:['First, I...','Next, I...','Then...','So the answer is...','I checked by...'], minWords:10, sentences:[2,5],
+     clueWords:['20','40','10','30','third','25%','quarter','÷','divide','left'], clueLabel:'🔢 Maths steps spotted',
+     placeholder:'e.g. First, I found ⅓ of 60...'}
+  ],
+  finishHeading:'🔓 YOU ESCAPED, {student}! 🎉',
+  key:{
+    myp:'Mathematics A: Knowing & understanding (fractions, negatives, ratio) · D: Applying mathematics in real-life contexts (Q7–8) · C: Communicating (the written final lock).',
+    how:'Alexa names a partner and chooses a theme (pirate ship, space station, secret MTR station, dim sum palace, or her own). The theme only changes the *words* (coins, crystals, dumplings...); **all numbers are fixed**, so the answers below are always right.',
+    branches:'One opening choice (clue / map / deal with the guard) adds a flavour paragraph only. It never changes the maths.',
+    written:`**The task:** 60 items; give away ⅓, then 25% of what's left. How many now?
+
+**Answer: 30.** ⅓ of 60 = 20 given away → 40 left. 25% of 40 = 10 given away → **30 left**.
+
+**Model explanation (Level 4):**
+> *First, I found ⅓ of 60 by dividing by 3, which is 20, so the guard had 60 − 20 = 40 left. Next, 25% is the same as a quarter, so I divided 40 by 4 to get 10. Then I took that away: 40 − 10 = 30. So the answer is 30. I checked by adding back: 30 + 10 + 20 = 60.*
+
+| Skill | 1 🌱 | 2 🌿 | 3 🌳 | 4 🌟 |
+|---|---|---|---|---|
+| **Method & accuracy** (A/D) | Wrong, with no workable method | Some correct steps but a key error (e.g. took 25% of 60 → 25, or ⅓ of 60 and stopped) | Correct answer (30) with a correct method | Correct + efficient + includes a check |
+| **Communicating** (C) | Only a number, or unclear | Some steps written, but a reader couldn't follow them all | Every step in order with numbers *and* words ("first... then...") | Clear, well-organised, uses maths vocabulary (quarter, remaining, percent) and checks the answer |
+
+**Common wrong answers:** **25** = took 25% of the *original* 60 (15) and ⅓ (20): 60 − 20 − 15. **35** = 60 − 25. **40** = stopped after step 1.`,
+    gaps:[
+      ['A. "Fractions make bigger"','Q1 = 32','Unsure what "of" means with fractions'],
+      ['B. Decimal length misconception','Q2 = 0.58 (or ⅗ / 0.6)','Thinks more digits = bigger; can\u2019t convert fractions to decimals'],
+      ['C. Crossing zero','Q3 = −5 or 21','No number-line picture for negatives'],
+      ['D. Ordering negatives','Q4 = A','Thinks −7 > −3 because 7 > 3'],
+      ['E. Additive vs multiplicative thinking','Q5 = 10, Q6 = 11 or 9','Hasn\u2019t yet understood ratios as scaling'],
+      ['F. Time as decimals','Q8 = 65','Treats hours as 100 minutes'],
+      ['G. Not checking reasonableness','Q7 = 6 tickets','Doesn\u2019t ask "does this make sense?"'],
+      ['H. Working not shown','Final lock: number only','Hasn\u2019t built the habit of communicating (MYP C)']],
+    tips:[
+      '**Number line on the fridge** (−10 to 10). Practise "warmer/colder" with real Hong Kong weather vs. the freezer. (Gaps C, D)',
+      '**Fraction wall + "divide by the bottom, times by the top"** for fractions of amounts. Say "¾ of" means "3 out of every 4". (A)',
+      '**Convert to compare:** a 2-minute drill turning ½, ¼, ⅕, ⅛, ⅗, ⅝ into decimals. Make a "fraction ↔ decimal" snap card game. (B)',
+      '**Bar models for ratio:** draw 3 boxes and 2 boxes, put 20 across them, and each box is 4. Use real recipes (bubble tea, pancakes) for scaling. (E)',
+      '**Time jumps:** practise on the MTR timetable: "Train at 3:47, arrive 4:15. How long?" Jump to the next hour first. (F)',
+      '**Estimate first, check after:** "About how much? Does my answer make sense?" (G)',
+      '**"Explain it to a friend" rule:** every answer needs one sentence of how. Praise clear steps more than speed. (H)'],
+    feeds:'Fraction and ratio scores are re-checked in **Session 09 (Pattern detective)** for early algebra readiness.'
+  }
+};
+
+/* ===== ENGINE ===== */
+const EMAIL_TO='Doris.s.chiu@gmail.com', EMAIL_CC='francoisdemange@hotmail.com';
+const TOTAL_SECONDS = CONFIG.seconds || 600;
+const PRONOUNS={she:{sub:'she',obj:'her',pos:'her'},he:{sub:'he',obj:'him',pos:'his'}};
+const QS = CONFIG.questions, PARTS = CONFIG.parts||[], WRITTEN = CONFIG.written||[];
+const S={student:'Alexa',setup:{},custom:{},choices:[],qIndex:0,answers:[],hintsUsed:0,stars:0,written:{},ratings:{},picks:{},sketched:{},confidence:null,started:null,finished:null,step:0,wIndex:0};
+let timerHandle=null,timeUpShown=false;
+const $=s=>document.querySelector(s), app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function optFor(item){ const v=S.setup[item.id]; if(v==='custom') return Object.assign({key:'custom',label:(S.custom[item.id]||'').trim()||item.customFallback||'my idea'}, {vars:item.customVars?item.customVars((S.custom[item.id]||'').trim()||item.customFallback||'my idea'):{}}); return (item.options||[]).find(o=>o.key===v); }
+function tokens(){
+  const T={student:S.student};
+  (CONFIG.setup||[]).forEach(it=>{
+    if(it.type==='name'){ T[it.id]=cap((S.setup[it.id]||'').trim())||it.fallback||'Sam'; }
+    else if(it.type==='pron'){ const p=PRONOUNS[S.setup[it.id]||'she']; T.sub=p.sub;T.obj=p.obj;T.pos=p.pos;T.Sub=cap(p.sub);T.Pos=cap(p.pos); }
+    else if(it.type==='text'){ T[it.id]=(S.setup[it.id]||'').trim()||it.fallback||''; }
+    else if(it.type==='cards'){ const o=optFor(it)||(it.options||[])[0]; T[it.id]=o.label; Object.assign(T,o.vars||{}); }
+  });
+  PARTS.forEach((p,i)=>{ if(p.choice){ const k=S.choices[i]; const o=p.choice.opts[k!=null?k:0]; Object.assign(T,o.vars||{}); T['choice'+(i+1)]=o.label; }});
+  if(CONFIG.extraTokens) Object.assign(T,CONFIG.extraTokens(T,S));
+  Object.keys(T).forEach(k=>{ if(typeof T[k]==='string' && !(('Cap_'+k) in T)) T['Cap_'+k]=cap(T[k]); });
+  return T;
+}
+function fill(str){ if(str==null) return ''; const T=tokens(); let out=String(str);
+  for(let pass=0;pass<2;pass++) out=out.replace(/\{(\w+)\}/g,(m,k)=>k in T?(pass===0&&/\{\w+\}/.test(T[k])?T[k]:esc(T[k])):m);
+  return out.replace(/\*(.+?)\*/g,'<em>$1</em>'); }
+function plain(str){ return fill(str).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim(); }
+function toast(m,ms=2600){const d=document.createElement('div');d.className='toast';d.innerHTML=m;document.body.appendChild(d);setTimeout(()=>d.remove(),ms);}
+function burst(x,y){const em=['⭐','🎉','✨','💜','🌟'];for(let i=0;i<10;i++){const s=document.createElement('span');s.className='burst';s.textContent=em[i%5];s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',(Math.random()*240-120)+'px');s.style.setProperty('--dy',(Math.random()*-200-40)+'px');document.body.appendChild(s);setTimeout(()=>s.remove(),1000);}}
+function setProgress(f){$('#progress div').style.width=Math.round(f*100)+'%';}
+function updatePills(){$('#stars').textContent='⭐ '+S.stars;$('#hintsPill').textContent='💡 '+S.hintsUsed;}
+function fmt(sec){const a=Math.abs(sec);return Math.floor(a/60)+':'+String(a%60).padStart(2,'0');}
+function elapsed(){ if(!S.started) return 0; return Math.round(((S.finished||Date.now())-S.started)/1000); }
+function tick(){const left=TOTAL_SECONDS-elapsed(),el=$('#timer');
+  if(left>=0){el.textContent='⏱️ '+fmt(left);el.className='pill'+(left<=120?' low':'');}
+  else{el.textContent='⏱️ +'+fmt(left)+' extra';el.className='pill over'; if(!timeUpShown){timeUpShown=true;toast('⏰ 10 minutes are up! Finish the bit you\u2019re on, then head to the end. No rush! 😊',4500);}}}
+function startTimer(){ if(S.started) return; S.started=Date.now(); tick(); timerHandle=setInterval(tick,1000); }
+function stopTimer(){ if(!S.finished) S.finished=Date.now(); clearInterval(timerHandle); tick(); }
+window.addEventListener('beforeunload',e=>{ if(S.started&&!S.finished){e.preventDefault();e.returnValue='';}});
+function block(p){ const s=fill(p.replace(/^!/,'')); return /^\s*</.test(s)?s:`<p class="${p.startsWith('!')?'short':''}">${s}</p>`; }
+function storySoFar(upTo){ let h=''; for(let i=0;i<PARTS.length&&i<upTo;i++){ h+=(PARTS[i].paras||[]).map(block).join(''); if(PARTS[i].choice&&S.choices[i]!=null) h+=`<div class="branch">${fill(PARTS[i].choice.opts[S.choices[i]].text)}</div>`; } if(upTo>=PARTS.length&&CONFIG.reference) h+=`<div class="box">${fill(CONFIG.reference)}</div>`; return h; }
+function rereadDetails(upTo,label){ const h=storySoFar(upTo); return h?`<details style="margin:6px 0 10px"><summary class="muted">📜 ${label||'Re-read'}</summary><div class="reread-panel story">${h}</div></details>`:''; }
+
+/* ---- intro ---- */
+function renderIntro(){ setProgress(0);
+  app.innerHTML=`<div class="card"><span class="tag">${CONFIG.icon} ${esc(CONFIG.subject)} · Quest #${CONFIG.num}</span>
+  <h1>${fill(CONFIG.introHeading)}</h1><p>${fill(CONFIG.introText)}</p>
+  <table class="plan">${CONFIG.plan.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>
+  <p class="muted">⭐ Each right answer earns stars. 💡 Stuck? Press the hint button. Hints are totally allowed (they just mean a slightly smaller score for that question). ⏱️ The timer is a guide, not a race.</p>
+  <label class="q" for="student">Your name</label><input type="text" id="student" value="${esc(S.student)}" maxlength="30">
+  <button class="btn alt" id="goBtn" style="margin-top:16px">🚀 Start my 10-minute quest!</button></div>`;
+  $('#goBtn').onclick=()=>{ S.student=$('#student').value.trim()||'Alexa'; startTimer(); (CONFIG.setup&&CONFIG.setup.length)?renderSetup():startParts(); };
+}
+/* ---- setup ---- */
+function renderSetup(){ setProgress(.05);
+  let h=`<div class="card"><span class="tag">🎨 Step 1 · ${CONFIG.setupTag||'Make it yours'}</span><h2>${fill(CONFIG.setupHeading||'Make it yours, {student}!')}</h2>`;
+  CONFIG.setup.forEach((it,n)=>{ const num=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'][n]||'▶️';
+    h+=`<label class="q">${num} ${it.label}</label>`;
+    if(it.type==='name'||it.type==='text'){ h+=`<input type="text" data-in="${it.id}" placeholder="${esc(it.placeholder||'Type here...')}" maxlength="${it.max||30}" value="${esc(S.setup[it.id]||'')}">`;
+      if(it.ideas) h+=`<div class="chips">${it.ideas.map(x=>`<button class="chip" data-idea="${it.id}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`; }
+    else if(it.type==='pron'){ const v=S.setup[it.id]||'she'; S.setup[it.id]=v; h+=`<div class="chips"><button class="chip ${v==='she'?'sel':''}" data-pron="${it.id}" data-v="she">👧 girl (she/her)</button><button class="chip ${v==='he'?'sel':''}" data-pron="${it.id}" data-v="he">👦 boy (he/him)</button></div>`; }
+    else if(it.type==='cards'){ h+=`<div class="grid">${it.options.map(o=>`<button class="opt ${S.setup[it.id]===o.key?'sel':''}" data-card="${it.id}" data-v="${o.key}"><span class="big">${o.icon}</span>${esc(o.label)}</button>`).join('')}${it.custom?`<button class="opt ${S.setup[it.id]==='custom'?'sel':''}" data-card="${it.id}" data-v="custom"><span class="big">✏️</span>${esc(it.custom)}</button>`:''}</div>`;
+      if(it.custom) h+=`<input type="text" data-cust="${it.id}" placeholder="${esc(it.customPlaceholder||'Type your idea...')}" maxlength="30" value="${esc(S.custom[it.id]||'')}" style="margin-top:8px;display:${S.setup[it.id]==='custom'?'block':'none'}">`; }
+  });
+  h+=`<div><button class="btn alt" id="toParts" style="margin-top:18px">${CONFIG.setupGo||'▶️ Let\u2019s go!'}</button></div><p class="muted" id="setupMsg"></p></div>`;
+  app.innerHTML=h;
+  const keep=()=>{ app.querySelectorAll('[data-in]').forEach(i=>S.setup[i.dataset.in]=i.value); app.querySelectorAll('[data-cust]').forEach(i=>S.custom[i.dataset.cust]=i.value); };
+  app.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{ app.querySelector(`[data-in="${b.dataset.idea}"]`).value=b.dataset.v; keep(); });
+  app.querySelectorAll('[data-pron]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.pron]=b.dataset.v; renderSetup(); });
+  app.querySelectorAll('[data-card]').forEach(b=>b.onclick=()=>{ keep(); S.setup[b.dataset.card]=b.dataset.v; renderSetup(); if(b.dataset.v==='custom'){ const c=app.querySelector(`[data-cust="${b.dataset.card}"]`); c&&c.focus(); } });
+  $('#toParts').onclick=()=>{ keep(); const miss=[];
+    CONFIG.setup.forEach(it=>{ if((it.type==='name'||it.type==='text')&&!it.optional&&!(S.setup[it.id]||'').trim()) miss.push(it.short||'your answer');
+      if(it.type==='cards'&&(!S.setup[it.id]||(S.setup[it.id]==='custom'&&!(S.custom[it.id]||'').trim()))) miss.push(it.short||'a choice'); });
+    if(miss.length){ $('#setupMsg').innerHTML='👀 Don\u2019t forget '+miss.join(', ')+'!'; return; }
+    CONFIG.setup.forEach(it=>{ if(S.setup[it.id]&&typeof S.setup[it.id]==='string') S.setup[it.id]=S.setup[it.id].trim().replace(/\s+/g,' '); if(S.custom[it.id]) S.custom[it.id]=S.custom[it.id].trim(); });
+    startParts(); };
+}
+/* ---- story / scenario parts ---- */
+function startParts(){ S.step=0; PARTS.length?renderPart():startQuestions(); }
+function renderPart(){ const i=S.step, P=PARTS[i]; setProgress(.1+i*(.35/Math.max(1,PARTS.length)));
+  const title= i===0&&CONFIG.storyTitle?`<h1>${fill(CONFIG.storyTitle)}</h1>`:(P.title?`<h2>${fill(P.title)}</h2>`:'');
+  app.innerHTML=`<div class="card story"><span class="tag">${CONFIG.partTag||'📜 Story'} · Part ${i+1} of ${PARTS.length}</span>${title}${i>0?rereadDetails(i,'Re-read so far'):''}
+    ${(P.paras||[]).map(block).join('')}<div id="branchOut"></div>
+    ${P.choice?`<div class="choice-box" id="choiceBox"><h3>🤔 ${fill(P.choice.q)}</h3><div class="choices">${P.choice.opts.map((o,k)=>`<button class="opt" data-choice="${k}"><span class="big">${o.icon}</span><span>${fill(o.label)}</span></button>`).join('')}</div></div>`:`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`}
+  </div>`;
+  window.scrollTo(0,0);
+  const next=()=>{ if(i<PARTS.length-1){S.step++;renderPart();} else startQuestions(); };
+  if(!P.choice){ $('#nextPart').onclick=next; return; }
+  app.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.choice; S.choices[i]=k;
+    app.querySelectorAll('[data-choice]').forEach(x=>{x.disabled=true;x.classList.toggle('sel',x===b);});
+    const out=$('#branchOut'); out.innerHTML=`<div class="branch">${fill(P.choice.opts[k].text)}</div>`+(P.after?(P.after.map(block).join('')):'')+`<button class="btn alt" id="nextPart">${i<PARTS.length-1?'➡️ Keep going':'🕵️ On to the questions!'}</button>`;
+    $('#choiceBox').after(out); $('#nextPart').onclick=next; $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- MCQs ---- */
+function startQuestions(){ S.qIndex=0; renderQuestion(); }
+function renderQuestion(){ const qi=S.qIndex,Q=QS[qi]; setProgress(.46+qi*(.4/QS.length));
+  const a=S.answers[qi]||(S.answers[qi]={hint:false,choice:null});
+  app.innerHTML=`<div class="card"><span class="tag">${Q.icon||'❓'} Question ${qi+1} of ${QS.length} · ${esc(Q.skill)}</span>
+    ${Q.context?`<div class="ctx">${fill(Q.context)}</div>`:''}<h2>${fill(Q.q)}</h2>
+    <div class="answers">${Q.opts.map((o,k)=>`<button class="ans" data-ans="${k}"><b class="letter">${'ABCD'[k]}</b><span>${fill(o.t)}</span></button>`).join('')}</div>
+    <div id="hintArea">${a.hint?`<div class="hintbox">💡 ${fill(Q.hint)}</div>`:''}</div><div id="fb"></div>
+    <div><button class="btn ghost" id="hintBtn" ${a.hint?'disabled':''}>💡 ${a.hint?'Hint used':'Show a hint'}</button>${(PARTS.length||CONFIG.reference)?'<button class="btn ghost" id="rereadBtn">📜 Re-read</button>':''}</div><div id="rereadPanel"></div></div>`;
+  window.scrollTo(0,0);
+  const rb=$('#rereadBtn'); if(rb) rb.onclick=()=>{const p=$('#rereadPanel'); p.innerHTML=p.innerHTML?'':`<div class="reread-panel story">${storySoFar(PARTS.length)}</div>`;};
+  $('#hintBtn').onclick=()=>{ if(a.hint||a.choice!=null) return; a.hint=true; S.hintsUsed++; updatePills(); $('#hintArea').innerHTML=`<div class="hintbox">💡 ${fill(Q.hint)}</div>`; $('#hintBtn').disabled=true; $('#hintBtn').textContent='💡 Hint used'; };
+  app.querySelectorAll('[data-ans]').forEach(b=>b.onclick=ev=>{ if(a.choice!=null) return; const k=+b.dataset.ans,o=Q.opts[k]; a.choice=k; a.correct=!!o.ok; a.points=o.ok?(a.hint?1:2):0; S.stars+=a.points; updatePills();
+    app.querySelectorAll('[data-ans]').forEach((x,j)=>{x.disabled=true; if(Q.opts[j].ok) x.classList.add('right');}); if(!o.ok) b.classList.add('wrong'); $('#hintBtn').disabled=true;
+    const right=Q.opts.find(x=>x.ok);
+    $('#fb').innerHTML=`<div class="feedback ${o.ok?'good':'bad'}">${o.ok?(a.hint?'✅ Correct, with a hint! +1 ⭐':'🎉 Correct! +2 ⭐'):'❌ Not this time, but now you know!'}<br>${fill(o.fb)}${o.ok?'':`<br><b>The best answer:</b> ${fill(right.t)}<br>${fill(right.fb)}`}</div>
+      <button class="btn alt" id="nextQ">${qi<QS.length-1?'➡️ Next question':(WRITTEN.length?'📝 On to the last part!':'🏁 See my results')}</button>`;
+    if(o.ok) burst(ev.clientX||200,ev.clientY||300);
+    $('#nextQ').onclick=()=>{ if(qi<QS.length-1){S.qIndex++;renderQuestion();} else { S.wIndex=0; WRITTEN.length?renderWritten():finishScreen(); } };
+    $('#nextQ').scrollIntoView({behavior:'smooth',block:'center'}); });
+}
+/* ---- written / creative / ratings ---- */
+function countSentences(t){ t=t.trim(); if(!t) return 0; return (t.match(/[^.!?。！？]+[.!?。！？]+/g)||[]).filter(s=>s.trim().length>1).length + (/[^.!?。！？\s]\s*$/.test(t)?1:0); }
+function countWords(t){ t=t.trim(); if(!t) return 0; const cjk=(t.match(/[\u3400-\u9fff]/g)||[]).length; const lat=t.replace(/[\u3400-\u9fff]/g,' ').trim(); return cjk+(lat?lat.split(/\s+/).length:0); }
+function clues(W,t){ if(!W.clueWords) return []; const low=' '+t.toLowerCase()+' '; return [...new Set(fill(W.clueWords.join('|')).toLowerCase().split('|').filter(w=>w&&low.includes(w)))]; }
+function renderWritten(){ const wi=S.wIndex, W=WRITTEN[wi], last=wi===WRITTEN.length-1; setProgress(.88+wi*.04);
+  let h=`<div class="card"><span class="tag">${W.tag||'📝 Your turn'}</span><h2>${fill(W.title)}</h2>${W.context?`<div class="ctx">${fill(W.context)}</div>`:''}<p>${fill(W.prompt)}</p>`;
+  if(W.type==='ratings'){ const R=S.ratings[W.id]||(S.ratings[W.id]={});
+    h+=W.items.map(it=>`<div class="rate"><span class="lbl">${fill(it.label)}</span><span class="chips">${[1,2,3,4].map(v=>`<button class="chip ${R[it.key]==v?'sel':''}" data-rate="${it.key}" data-v="${v}">${(W.scale||['🌱 1','🌿 2','🌳 3','🌟 4'])[v-1]}</button>`).join('')}</span></div>`).join('');
+  } else if(W.type==='pick'){ h+=`<div class="grid">${W.options.map(o=>`<button class="opt ${S.picks[W.id]===o.key?'sel':''}" data-pick="${o.key}"><span class="big">${o.icon}</span>${fill(o.label)}</button>`).join('')}</div>`;
+    if(W.followUp) h+=`<label class="q">${fill(W.followUp)}</label><textarea id="wtext" style="min-height:100px" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea>`;
+  } else {
+    if(W.starters) h+=`<p class="muted">Tap a starter to add it:</p><div class="chips">${W.starters.map(s=>`<button class="chip" data-start="${esc(fill(s))}">${fill(s)}</button>`).join('')}</div>`;
+    h+=`<textarea id="wtext" placeholder="${esc(W.placeholder||'Type here...')}">${esc(S.written[W.id]||'')}</textarea><div class="stats" id="wstats"></div>`;
+    if(W.sketch) h+=`<details style="margin-top:10px" ${W.sketchOpen?'open':''}><summary><b>🖍️ Sketch pad (optional)</b> · draw with your finger or mouse</summary><canvas class="sketch" id="sk" width="700" height="260"></canvas>
+      <div class="chips">${['#2d2a4a','#e2483d','#ff9f1c','#ffd23f','#22a06b','#4cc9f0','#7b5cff','#ff5d8f'].map(c=>`<button class="chip" data-col="${c}" style="background:${c};width:34px;height:34px;padding:0"></button>`).join('')}<button class="chip" id="skClear">🧽 Clear</button><a class="chip" id="skSave" download="sketch-session-${CONFIG.num}.png" href="#">💾 Save picture</a></div></details>`;
+  }
+  if(PARTS.length||CONFIG.reference) h+=rereadDetails(PARTS.length,'Re-read');
+  if(last) h+=`<label class="q">🌡️ How did today's quest feel?</label><div class="conf">${[['1','🌱','Tricky!'],['2','🌿','OK-ish'],['3','🌳','Pretty good'],['4','🌟','Easy-peasy!']].map(c=>`<button class="opt ${S.confidence===c[0]?'sel':''}" data-conf="${c[0]}"><span class="big">${c[1]}</span>${c[0]} · ${c[2]}</button>`).join('')}</div>`;
+  h+=`<button class="btn alt" id="wNext" style="margin-top:16px">${last?'🏁 Finish &amp; see my results':'➡️ Next'}</button><p class="muted" id="wMsg"></p></div>`;
+  app.innerHTML=h; window.scrollTo(0,0);
+  const ta=$('#wtext');
+  const upd=()=>{ if(!ta) return; S.written[W.id]=ta.value; const st=$('#wstats'); if(!st) return; const c=clues(W,ta.value), n=countSentences(ta.value);
+    st.innerHTML=`<span>✍️ ${countWords(ta.value)} words</span><span>📏 ${n} sentence${n===1?'':'s'}${W.sentences?(n>=W.sentences[0]?' ✅':` (aim for ${W.sentences[0]}${W.sentences[1]!==W.sentences[0]?'–'+W.sentences[1]:''})`):''}</span>${W.clueWords?`<span>${W.clueLabel||'🔍 Key words'}: ${c.length?esc(c.join(', ')):'none yet'}</span>`:''}`; };
+  if(ta){ ta.oninput=upd; upd(); }
+  app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{ const s=b.dataset.start.replace(/\.\.\.$|…$/,' '); ta.value=ta.value.trim()?ta.value.replace(/\s*$/,'')+' '+s:s; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); upd(); });
+  app.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{ S.ratings[W.id][b.dataset.rate]=+b.dataset.v; app.querySelectorAll(`[data-rate="${b.dataset.rate}"]`).forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ S.picks[W.id]=b.dataset.pick; app.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  app.querySelectorAll('[data-conf]').forEach(b=>b.onclick=()=>{ S.confidence=b.dataset.conf; app.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  const cv=$('#sk'); if(cv){ const ctx=cv.getContext('2d'); let col='#2d2a4a',down=false; ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round';
+    const pos=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+    cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y);ctx.strokeStyle=col;S.sketched[W.id]=true;};
+    cv.onpointermove=e=>{if(!down)return;const [x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke();}; cv.onpointerup=()=>down=false;
+    app.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>col=b.dataset.col); $('#skClear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);S.sketched[W.id]=false;};
+    $('#skSave').onclick=()=>{ $('#skSave').href=cv.toDataURL('image/png'); }; }
+  $('#wNext').onclick=()=>{ if(ta) S.written[W.id]=ta.value;
+    if(W.type==='ratings'){ const miss=W.items.filter(it=>!S.ratings[W.id][it.key]); if(miss.length){ $('#wMsg').textContent='🌡️ Rate every line first ('+miss.length+' to go).'; return; } }
+    else if(W.type==='pick'){ if(!S.picks[W.id]){ $('#wMsg').textContent='👆 Pick one first!'; return; } if(W.followUp&&countWords(ta.value)<(W.minWords||3)){ $('#wMsg').textContent='✍️ Add a few words to explain.'; return; } }
+    else if(countWords(ta.value)<(W.minWords||5)){ $('#wMsg').textContent='✍️ Write a little more first (at least '+(W.minWords||5)+' words)!'; return; }
+    if(last&&!S.confidence){ $('#wMsg').textContent='🌡️ Pick how the quest felt (1–4).'; return; }
+    if(last) finishScreen(); else { S.wIndex++; renderWritten(); } };
+}
+/* ---- scoring & results ---- */
+function skillScores(){ const sk={}; QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const s=sk[Q.skill]=sk[Q.skill]||{pts:0,hints:0,correct:0,n:0,icon:Q.icon,crit:Q.crit};
+  s.pts+=a.points||0; s.hints+=a.hint?1:0; s.correct+=a.correct?1:0; s.n++; });
+  Object.values(sk).forEach(v=>v.level=Math.max(1,Math.min(4,Math.round(v.pts/(2*v.n)*4)))); return sk; }
+const LEVELS={1:'🌱 Beginning',2:'🌿 Developing',3:'🌳 Secure',4:'🌟 Extending'};
+const lvlWord=l=>LEVELS[l]?LEVELS[l].replace(/^\S+ /,''):'';
+function setupLines(){ const L=[]; (CONFIG.setup||[]).forEach(it=>{ let v;
+  if(it.type==='pron') v=S.setup[it.id]==='he'?'boy (he/him)':'girl (she/her)';
+  else if(it.type==='cards'){ const o=optFor(it); v=o?o.label+(S.setup[it.id]==='custom'?' (own idea)':''):'-'; }
+  else v=(S.setup[it.id]||'').trim()||'-';
+  L.push(`${plain(it.resultLabel||it.label)}: ${v}`); }); return L; }
+function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()), L=[];
+  L.push(`${S.student.toUpperCase()}'S RESULTS · Session ${String(CONFIG.num).padStart(2,'0')} · ${CONFIG.title} (${CONFIG.subject} diagnostic)`);
+  L.push(`Date: ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+  L.push(`Time taken: ${fmt(elapsed())} (target ${fmt(TOTAL_SECONDS)})`);
+  L.push(`Stars: ${S.stars}/${QS.length*2} · Questions correct: ${S.answers.filter(a=>a&&a.correct).length}/${QS.length} · Hints used: ${S.hintsUsed}`);
+  if((CONFIG.setup||[]).length||PARTS.some(p=>p.choice)){ L.push('','--- MY CHOICES ---'); L.push(...setupLines());
+    PARTS.forEach((p,i)=>{ if(p.choice) L.push(`Choice ${i+1}: ${plain(p.choice.q)} -> ${S.choices[i]!=null?plain(p.choice.opts[S.choices[i]].label):'(none)'}`); }); }
+  L.push('','--- QUESTIONS ---');
+  QS.forEach((Q,i)=>{ const a=S.answers[i]||{}; const ans=a.choice!=null?`${'ABCD'[a.choice]}. ${plain(Q.opts[a.choice].t)}`:'(not answered)'; const r=Q.opts.findIndex(o=>o.ok);
+    L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[r]}`}`); });
+  L.push('','--- SKILL SCORES (1-4) ---');
+  Object.entries(sk).forEach(([k,v])=>L.push(`${k}${v.crit?' [MYP '+v.crit+']':''}: ${v.level}/4 ${lvlWord(v.level)} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
+  WRITTEN.forEach(W=>{ if(W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false) L.push(`${W.skillLabel||plain(W.title)}${W.crit?' [MYP '+W.crit+']':''}: to be marked by a grown-up, 1-4`); });
+  WRITTEN.forEach(W=>{ L.push('',`--- ${plain(W.resultLabel||W.title).toUpperCase()} ---`);
+    if(W.type==='ratings'){ W.items.forEach(it=>L.push(`${plain(it.label)}: ${S.ratings[W.id]&&S.ratings[W.id][it.key]||'-'}/4`)); }
+    else if(W.type==='pick'){ const o=W.options.find(o=>o.key===S.picks[W.id]); L.push(`Picked: ${o?plain(o.label):'-'}`); if(W.followUp) L.push(`${plain(W.followUp)} ${(S.written[W.id]||'').trim()}`); }
+    else { const t=(S.written[W.id]||'').trim(); L.push(t); const c=clues(W,t); L.push(`(${countWords(t)} words, ${countSentences(t)} sentences${W.clueWords?', key words: '+(c.join(', ')||'none'):''}${W.sketch?', sketch drawn: '+(S.sketched[W.id]?'yes (saved separately)':'no'):''})`); } });
+  L.push('',`How the quest felt (1-4): ${S.confidence} ${lvlWord(S.confidence)}`);
+  return L.join('\n'); }
+function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), txt=resultsText();
+  const subj=`Session ${String(CONFIG.num).padStart(2,'0')} results: ${S.student} – ${CONFIG.title}`;
+  let mailBody=txt; if(mailBody.length>1800) mailBody=mailBody.slice(0,1800)+'\n...(cut short - please also paste the full results from "Copy my results")';
+  const mail=`mailto:${EMAIL_TO}?cc=${encodeURIComponent(EMAIL_CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mailBody)}`;
+  app.innerHTML=`<div class="card"><span class="tag">🏆 Quest complete!</span><h1>${fill(CONFIG.finishHeading||'Amazing work, {student}! 🎉')}</h1>
+    <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
+    <h2 style="margin-top:18px">Your skill scores</h2>
+    ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon||''} ${esc(k)}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div><div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div><div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
+    ${WRITTEN.filter(W=>W.type!=='ratings'&&W.type!=='pick'&&W.marked!==false).map(W=>`<div class="skill"><div class="row"><span>📝 ${esc(W.skillLabel||plain(W.title))}</span><span>Grown-up marks this one</span></div><div class="muted">${countWords(S.written[W.id]||'')} words · ${countSentences(S.written[W.id]||'')} sentences</div></div>`).join('')}
+    <h2 style="margin-top:18px">📋 Send your results</h2><p>Tap <b>Copy my results</b>, then paste into an email to Mum, or tap <b>Open in email</b>.</p>
+    <button class="btn alt" id="copyBtn">📋 Copy my results</button><a class="btn ghost" id="mailBtn" href="${mail}">✉️ Open in email</a><p class="muted" id="copyMsg"></p>
+    <pre id="resultText">${esc(txt)}</pre><button class="btn ghost" id="again">🔁 Play again (new choices)</button></div>`;
+  window.scrollTo(0,0); burst(innerWidth/2,200);
+  $('#copyBtn').onclick=async()=>{ let ok=false; try{ if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(txt);ok=true;} }catch(e){}
+    if(!ok){ const t=document.createElement('textarea'); t.value=txt; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); try{ok=document.execCommand('copy');}catch(e){} t.remove(); }
+    $('#copyMsg').innerHTML=ok?'✅ Copied! Now paste it into an email or message to Mum.':'⚠️ Couldn\u2019t copy automatically. Press and hold the text below, choose "Select all" and then "Copy".'; };
+  $('#again').onclick=()=>{ if(confirm('Start again? (Copy your results first!)')) location.reload(); };
+}
+/* ---- self-test helper (used by automated checks only) ---- */
+window.__selfTest=function(){ const bad=new Set(), saved=JSON.stringify(S); const setup=CONFIG.setup||[];
+  const combos=[{}]; setup.forEach(it=>{ let vals=[]; if(it.type==='pron') vals=['she','he']; else if(it.type==='cards') vals=it.options.map(o=>o.key).concat(it.custom?['custom']:[]); else vals=['Testname'];
+    const n=[]; combos.forEach(c=>vals.forEach(v=>n.push(Object.assign({},c,{[it.id]:v})))); combos.splice(0,combos.length,...n.slice(0,400)); });
+  const maxC=Math.max(1,...PARTS.map(p=>p.choice?p.choice.opts.length:1));
+  combos.forEach(c=>{ S.setup=c; setup.forEach(it=>{ if(it.type==='cards') S.custom[it.id]='test idea'; });
+    for(let k=0;k<maxC;k++){ S.choices=PARTS.map(p=>p.choice?Math.min(k,p.choice.opts.length-1):null);
+      let all=[CONFIG.storyTitle,CONFIG.reference,CONFIG.setupHeading,CONFIG.finishHeading]; PARTS.forEach(p=>{ all.push(...(p.paras||[]),...(p.after||[]),p.title); if(p.choice){ all.push(p.choice.q); p.choice.opts.forEach(o=>all.push(o.label,o.text)); } });
+      QS.forEach(Q=>{ all.push(Q.q,Q.hint,Q.context); Q.opts.forEach(o=>all.push(o.t,o.fb)); }); WRITTEN.forEach(W=>{ all.push(W.title,W.prompt,W.context,W.followUp,...(W.starters||[]),...((W.items||[]).map(i=>i.label)),...((W.options||[]).map(o=>o.label))); });
+      all.forEach(s=>{ if(s){ const m=fill(s).match(/\{\w+\}/g); if(m) m.forEach(x=>bad.add(x)); } }); } });
+  Object.assign(S,JSON.parse(saved));
+  const pos=QS.map(Q=>'ABCD'[Q.opts.findIndex(o=>o.ok)]).join(''); const multi=QS.filter(Q=>Q.opts.filter(o=>o.ok).length!==1).length;
+  return {leftover:[...bad], combos:combos.length, positions:pos, badOk:multi}; };
+$('#hdrTitle').textContent=`${CONFIG.icon} ${CONFIG.title} · Session ${String(CONFIG.num).padStart(2,'0')}`;
+document.title=`Session ${CONFIG.num} · ${CONFIG.title}`;
+renderIntro(); updatePills();
+</script>
+</body>
+</html>
