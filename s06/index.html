@@ -360,7 +360,7 @@ function resultsText(){ const sk=skillScores(), d=new Date(S.started||Date.now()
   return L.join('\n'); }
 function finishScreen(){ stopTimer(); setProgress(1); const sk=skillScores(), txt=resultsText();
   const subj=`Session ${String(CONFIG.num).padStart(2,'0')} results: ${S.student} – ${CONFIG.title}`;
-  let mailBody=txt; if(mailBody.length>1800) mailBody=mailBody.slice(0,1800)+'\n...(cut short - please also paste the full results from "Copy my results")';
+  let mailBody=txt; if(mailBody.length>1800) mailBody=Array.from(mailBody).slice(0,1800).join('')+'\n...(cut short - please also paste the full results from "Copy my results")';
   const mail=`mailto:${EMAIL_TO}?cc=${encodeURIComponent(EMAIL_CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mailBody)}`;
   app.innerHTML=`<div class="card"><span class="tag">🏆 Quest complete!</span><h1>${fill(CONFIG.finishHeading||'Amazing work, {student}! 🎉')}</h1>
     <div class="stats"><span>⭐ ${S.stars} / ${QS.length*2} stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / ${QS.length} correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
