@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 01 · Story Detective Quest</title>
+<style>
+  :root{
+    --bg1:#ffecd2; --bg2:#fcb69f; --ink:#2d2a4a; --card:#ffffff;
+    --pri:#7b5cff; --pri2:#5a3de0; --ok:#22a06b; --okbg:#e3fcef; --bad:#e2483d; --badbg:#ffebe9;
+    --warn:#ff9f1c; --sky:#4cc9f0; --pink:#ff5d8f; --yellow:#ffd23f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Trebuchet MS","Segoe UI","Noto Sans",system-ui,-apple-system,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";
+       color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;font-size:18px;line-height:1.5}
+  header{position:sticky;top:0;z-index:20;background:rgba(45,42,74,.95);color:#fff;display:flex;align-items:center;gap:10px;
+         padding:8px 14px;flex-wrap:wrap;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  header .title{font-weight:bold;flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+  #timer.low{background:var(--warn);color:#2d2a4a}
+  #timer.over{background:var(--pink)}
+  #progress{height:6px;background:rgba(255,255,255,.4)}
+  #progress div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--pri),var(--pink));transition:width .5s}
+  main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .card{background:var(--card);border-radius:22px;padding:20px 20px 22px;margin:14px 0;box-shadow:0 8px 24px rgba(90,61,224,.15);animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.97) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-size:28px;margin:4px 0 8px;color:var(--pri2)}
+  h2{font-size:22px;margin:4px 0 10px;color:var(--pri2)}
+  .muted{color:#6b6790;font-size:15px}
+  .tag{display:inline-block;font-size:13px;font-weight:bold;padding:2px 10px;border-radius:999px;background:#efeaff;color:var(--pri2);margin-bottom:6px}
+  label.q{display:block;font-weight:bold;margin:16px 0 6px}
+  input[type=text],textarea{width:100%;font:inherit;padding:10px 12px;border:3px solid #ddd6ff;border-radius:14px;outline:none;background:#fbfaff}
+  input[type=text]:focus,textarea:focus{border-color:var(--pri)}
+  textarea{min-height:150px;resize:vertical}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{border:2px solid #ddd6ff;background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+  .chip:hover,.chip.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .opt{border:3px solid #ece8ff;background:#fff;border-radius:18px;padding:12px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+  .opt .big{font-size:34px;display:block}
+  .opt:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .opt.sel{border-color:var(--pri);background:#f3efff;box-shadow:0 0 0 3px rgba(123,92,255,.25)}
+  .btn{display:inline-block;border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:bold;cursor:pointer;
+       background:linear-gradient(180deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 4px 0 #3f2aa8;margin:6px 6px 0 0}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.alt{background:linear-gradient(180deg,#ffe066,#ffc300);color:var(--ink);box-shadow:0 4px 0 #c99700}
+  .btn.ghost{background:#fff;color:var(--pri2);border:2px solid #ddd6ff;box-shadow:none}
+  .story p{margin:0 0 12px;font-size:19px}
+  .story p.short{font-weight:bold;font-size:21px;color:var(--pink)}
+  .story p.branch{background:#fff8e1;border-left:5px solid var(--yellow);padding:8px 12px;border-radius:8px}
+  .story em{color:#1d5fa8}
+  .choice-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#e0f7ff,#f3efff)}
+  .choice-box h3{margin:0 0 10px;font-size:19px}
+  .choices{display:grid;gap:10px}
+  .choices .opt{text-align:left;display:flex;gap:10px;align-items:center}
+  .choices .opt .big{font-size:28px;display:inline}
+  .answers{display:grid;gap:10px;margin-top:12px}
+  .ans{border:3px solid #ece8ff;background:#fff;border-radius:16px;padding:12px 14px;font:inherit;text-align:left;cursor:pointer;display:flex;gap:10px}
+  .ans b.letter{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:#efeaff;color:var(--pri2)}
+  .ans:hover:not(:disabled){border-color:var(--sky)}
+  .ans.right{border-color:var(--ok);background:var(--okbg)}
+  .ans.wrong{border-color:var(--bad);background:var(--badbg)}
+  .ans:disabled,.opt:disabled{cursor:default;color:var(--ink);opacity:1}
+  .choices .opt:disabled:not(.sel){opacity:.55}
+  .feedback{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:17px;animation:pop .3s}
+  .feedback.good{background:var(--okbg);border:2px solid var(--ok)}
+  .feedback.bad{background:var(--badbg);border:2px solid var(--bad)}
+  .hintbox{margin-top:12px;padding:10px 14px;border-radius:14px;background:#fff8e1;border:2px dashed var(--warn);font-size:16px}
+  .quote{background:#f3efff;border-radius:12px;padding:8px 12px;font-style:italic;margin:8px 0}
+  .reread{margin-top:10px}
+  .reread-panel{margin-top:10px;max-height:300px;overflow:auto;border:2px solid #ece8ff;border-radius:14px;padding:12px;background:#fdfcff}
+  .reread-panel p{font-size:16px;margin:0 0 8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .stats span{background:#efeaff;border-radius:999px;padding:4px 12px;font-size:15px}
+  .skill{margin:10px 0}
+  .skill .row{display:flex;justify-content:space-between;font-weight:bold}
+  .bar{height:16px;border-radius:999px;background:#eee;overflow:hidden;margin-top:4px}
+  .bar div{height:100%;border-radius:999px}
+  .lvl1{background:#ff8fa3}.lvl2{background:#ffc300}.lvl3{background:#4cc9f0}.lvl4{background:#22a06b}
+  pre#resultText{white-space:pre-wrap;background:#fbfaff;border:2px solid #ece8ff;border-radius:14px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;
+         z-index:50;font-weight:bold;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:pop .3s;max-width:90%;text-align:center}
+  .burst{position:fixed;pointer-events:none;font-size:28px;z-index:60;animation:fly 1s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+  .conf{display:flex;gap:8px;flex-wrap:wrap}
+  .conf .opt{flex:1;min-width:120px}
+  .plan{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
+  .plan td{padding:6px 8px;border-bottom:1px dashed #ddd}
+  @media (max-width:520px){ body{font-size:17px} h1{font-size:24px} .story p{font-size:18px} header .title{font-size:13px} header{gap:6px;padding:8px 10px} .pill{font-size:14px;padding:3px 9px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="title">🕵️ Story Detective · Session 01</div>
+  <div class="pill" id="stars" title="Star points">⭐ 0</div>
+  <div class="pill" id="hintsPill" title="Hints used">💡 0</div>
+  <div class="pill" id="timer" title="Time left">⏱️ 10:00</div>
+</header>
+<div id="progress"><div></div></div>
+<main id="app"></main>
+
+<script>
+/* ===================== DATA ===================== */
+const TOTAL_SECONDS = 600;
+const PRONOUNS = { she:{sub:'she',obj:'her',pos:'her'}, he:{sub:'he',obj:'him',pos:'his'} };
+const NAME_IDEAS = ['Mei','Kai','Zara','Leo','Ruby','Hana'];
+
+const SETTINGS = {
+  hk:     {icon:'🚋', label:'Hong Kong', place:'Hong Kong', stop:'the tram stop on Des Voeux Road', home:'a flat on the fourteenth floor of a tall, thin building', sky:'the sky over Victoria Harbour', hills:'the Peak', crowd:'the bus shelter'},
+  lantau: {icon:'🏝️', label:'Lantau Island', place:'the village', stop:'the ferry pier at Mui Wo', home:'a little village house with a blue door near the beach', sky:'the sky over the sea', hills:'Sunset Peak', crowd:'the ferry waiting room'},
+  london: {icon:'🎡', label:'London', place:'London', stop:'the red bus stop on Baker Street', home:'a narrow flat above a bakery', sky:'the sky over the River Thames', hills:'the rooftops', crowd:'the bus shelter'},
+  sky:    {icon:'☁️', label:'Floating Sky City', place:'Cloudhaven', stop:'the hot-air-balloon station', home:'a round tower room on the fourteenth floating island', sky:'the sky around Cloudhaven', hills:'the cloud mountains', crowd:'the balloon station'}
+};
+function customSetting(txt){ return {icon:'✏️', label:txt, place:txt, stop:'the bus stop on the corner', home:'a flat on the fourteenth floor', sky:'the sky over '+txt, hills:'the distant hills', crowd:'the nearest shelter'}; }
+
+const OBJECTS = {
+  umbrella: {icon:'☂️', label:'Umbrella', name:'umbrella', the:'the red umbrella', flaws:'a bent spoke, a squeaky button and a pattern of little yellow ducks', secret:'the yellow ducks',
+             save:'{Name} opened the umbrella with a squeak. Rain drummed on the yellow ducks, but underneath them {sub} was perfectly, wonderfully dry. For the first time, {sub} did not mind the ducks at all.'},
+  torch:    {icon:'🔦', label:'Torch', name:'torch', the:'the old torch', flaws:'a flickery switch, a cracked lens and about a hundred glittery unicorn stickers', secret:'the unicorn stickers',
+             save:'{Name} clicked the torch. It flickered... then blazed. A bright beam, sparkling with unicorns, lit the path for everyone. For the first time, {sub} did not mind the unicorns at all.'},
+  raincoat: {icon:'🐸', label:'Raincoat', name:'raincoat', the:'the yellow raincoat', flaws:'a stuck zip, a missing button and a hood with two googly frog eyes', secret:'the frog eyes',
+             save:'{Name} pulled on the raincoat. The stuck zip slid up smoothly, just this once. The frog eyes glared at the storm, and {sub} stayed perfectly dry. For the first time, {sub} did not mind the frog at all.'}
+};
+function customObject(txt){ return {icon:'✏️', label:txt, name:txt, the:'the '+txt, flaws:'a scratch, a wobbly bit and decorations that were far too babyish', secret:'how babyish it looked',
+  save:'{Name} held up the '+txt+'. Somehow, impossibly, it was exactly what {sub} needed to get through the storm. For the first time, {sub} was glad to have it.'}; }
+
+/* Story: fixed paragraphs + 3 branching choices. Every MCQ is about the FIXED text, so it works for every branch. */
+const STORY = [
+  { paras:[
+      '{Name} left {the} at {stop} on Monday. {Sub} did it on purpose. It had {flaws}, which had been fine when {sub} was seven, but was definitely *not* fine now that {sub} was eleven and three-quarters.',
+      '{Name} lived in {home}. Hardly anyone nearby even knew {pos} name, let alone knew about {secret}.',
+      '!On Tuesday, the {oname} was waiting outside {pos} front door.',
+      'Tied to it was a note, written in neat blue ink: *You forgot something.*',
+      '{Name} frowned.'
+    ],
+    choice:{ q:'What should {Name} do with the {oname}?', opts:[
+      {icon:'🧥', label:'Hide it at the back of the wardrobe', text:'{Name} stuffed the {oname} behind a pile of old jumpers at the back of the wardrobe and shut the door. Firmly. Twice.'},
+      {icon:'🎁', label:'Drop it in the school charity box', text:'At school, {Name} dropped the {oname} into the charity box by the library and walked away without looking back. Someone else could love {secret}.'},
+      {icon:'🪧', label:'Leave it on a bench with a FREE sign', text:'{Name} left the {oname} on a bench with a cardboard sign: FREE TO A GOOD HOME. {Sub} felt rather proud of that sign.'}
+    ]}
+  },
+  { paras:[
+      '!The next morning, it was back.',
+      'This time, the note said: *A storm is coming. Keep me close. Trust me.*',
+      '{Name} looked out of the window. {Sky} was a perfect, cloudless blue. {Sub} laughed, but quietly, the way you laugh when you are not completely sure something is funny.'
+    ],
+    choice:{ q:'Time to investigate! 🔎 Where should {Name} look for clues?', opts:[
+      {icon:'🙋', label:'Ask the neighbour next door', text:'{Name} knocked on the neighbour\u2019s door. "Didn\u2019t see anyone," said the neighbour, "but there was a smell of jasmine tea outside your door this morning. Lovely smell. Very old-fashioned."'},
+      {icon:'🔍', label:'Study the note with a magnifying glass', text:'Under the magnifying glass, the handwriting was neat and loopy, the kind people learned a long time ago. The paper smelled faintly of jasmine tea, and pressed into one corner was a tiny letter: G.'},
+      {icon:'🧂', label:'Set a trap with flour outside the door', text:'{Name} sprinkled flour outside the door. In the morning there were footprints: small, soft and slipper-shaped. Beside them lay a single curled leaf of jasmine tea.'}
+    ]}
+  },
+  { paras:[
+      'By three o\u2019clock, clouds had rolled in like a herd of grey sheep over {hills}. By four, the rain was so heavy and the wind so wild that the whole of {place} seemed to hold its breath. Then, with a fizz, the lights went out. Everyone squeezed into {crowd}, shoulder to soggy shoulder, blinking in the dark.',
+      '!Everyone except {Name}.',
+      '{SAVE}',
+      'Tucked into the {oname} was a new note in the same neat blue ink: *Told you. \u2014 G.*'
+    ],
+    choice:{ q:'How should the story end? You decide! ✨', opts:[
+      {icon:'💌', label:'Write a thank-you note back', text:'That night, {Name} wrote a note in {pos} very best handwriting: *Thank you, whoever you are.* In the morning the note was gone. In its place was a paper crane, folded perfectly, with a tiny blue G on its wing.'},
+      {icon:'🍵', label:'Follow the smell of jasmine tea', text:'{Name} followed the smell of jasmine tea until it stopped at a door {sub} had never really noticed before. Behind it, someone was humming a song {sub} half-remembered from when {sub} was little. {Sub} lifted a hand to knock... and decided that some mysteries are nicer for a little longer.'},
+      {icon:'👀', label:'Keep the {oname} close and wait', text:'{Name} hung the {oname} right by the front door, where {sub} could see it every day. {Sub} never hid it again. And sometimes, just sometimes, {sub} found a fresh note tucked inside, with a little blue G at the bottom.'}
+    ]}
+  }
+];
+
+/* 8 branch-neutral MCQs, 2 per skill */
+const QUESTIONS = [
+  {skill:'Retrieval', icon:'🔍', q:'Why did {Name} leave the {oname} at {stop} <b>on purpose</b>?',
+   opts:[
+     {t:'It was a bit broken and felt too babyish for {obj} now', ok:true, fb:'Yes! The story says it had {flaws}. That was fine at seven, but "definitely <i>not</i> fine" at eleven and three-quarters.'},
+     {t:'{Sub} was in a hurry and forgot it', fb:'Not quite. The story says {Sub_} did it <b>on purpose</b>, so it wasn\u2019t an accident.'},
+     {t:'It belonged to {pos} little cousin', fb:'Hmm, the story never mentions a cousin. Look at the very first paragraph again.'},
+     {t:'It was too heavy to carry', fb:'Nope, nothing about weight! The first paragraph lists what was <i>wrong</i> with it, and how old {Name} is now.'}],
+   hint:'Look at the very first paragraph. What was wrong with it, and how old is {Name} now compared with age seven?'},
+  {skill:'Retrieval', icon:'🔍', q:'What did the <b>second</b> note say?',
+   opts:[
+     {t:'"You forgot something."', fb:'Close, but that was the <b>first</b> note, tied on when the {oname} came back on Tuesday.'},
+     {t:'"A storm is coming. Keep me close. Trust me."', ok:true, fb:'Spot on! It arrived "the next morning", when the sky was still cloudless and blue.'},
+     {t:'"Told you. \u2014 G."', fb:'That\u2019s the <b>last</b> note, after the storm. Look at the middle of the story.'},
+     {t:'"Please give me back."', fb:'That note isn\u2019t in the story! Look at the part that begins "The next morning...".'}],
+   hint:'There are three notes. The second one appears in the part that starts "The next morning, it was back."'},
+  {skill:'Inference', icon:'🧠', q:'{Name} "laughed, but quietly, the way you laugh when you are not completely sure something is funny." How is {Name} <b>really</b> feeling?',
+   opts:[
+     {t:'Totally delighted. It\u2019s the funniest joke ever!', fb:'If it were the funniest joke ever, would {Sub_} laugh <i>quietly</i>? The writer says {sub} is "not completely sure".'},
+     {t:'A little uneasy. Part of {obj} wonders if the note might be right.', ok:true, fb:'Great detective thinking! A quiet, unsure laugh hides a feeling. The sky looks perfect, but {Sub_} can\u2019t quite shake off the warning.'},
+     {t:'Angry about the weather', fb:'The weather is lovely at this point! The clue is in <i>how</i> {sub} laughs.'},
+     {t:'Bored and sleepy', fb:'Nothing suggests boredom. Think about why someone might laugh <i>quietly</i>.'}],
+   hint:'If something is REALLY funny, do you laugh quietly? A quiet, unsure laugh can hide another feeling.'},
+  {skill:'Inference', icon:'🧠', q:'Which clue best suggests that G knows {Name} <b>really well</b>?',
+   opts:[
+     {t:'G writes in blue ink', fb:'Lots of people use blue ink, so that doesn\u2019t prove G knows {obj} well.'},
+     {t:'The sky was a cloudless blue', fb:'That\u2019s about the weather, not about G.'},
+     {t:'G knew about {secret}, which hardly anyone knew about', ok:true, fb:'Exactly! The story says hardly anyone knew {pos} name, "let alone" about {secret}. So G must be someone close to {obj}.'},
+     {t:'The lights went out in the storm', fb:'That\u2019s an event in the story, not a clue about who G is.'}],
+   hint:'Re-read the sentence that starts "Hardly anyone nearby even knew..." What did G know that others didn\u2019t?'},
+  {skill:'Figurative language', icon:'🎨', q:'"...the whole of {place} seemed to <b>hold its breath</b>." What does this mean?',
+   opts:[
+     {t:'Everyone in {place} actually stopped breathing', fb:'Ha! Not literally. A place can\u2019t really breathe. The writer is describing a <i>mood</i>.'},
+     {t:'Everything went very still and quiet, as if waiting', ok:true, fb:'Yes! This is <b>personification</b>: giving a place a human action (holding its breath) to create a tense, waiting mood.'},
+     {t:'{Place} was completely underwater', fb:'There\u2019s heavy rain, but the phrase is about the <i>feeling</i> of the moment, not a flood.'},
+     {t:'People were holding their noses', fb:'Nothing smelly here! Think about what you do when you hold your breath: you wait, very still.'}],
+   hint:'Can a city or a village really breathe? What do YOU do when you hold your breath? (You wait... very still...)'},
+  {skill:'Figurative language', icon:'🎨', q:'"Clouds had rolled in <b>like a herd of grey sheep</b>." Which technique is this?',
+   opts:[
+     {t:'Personification', fb:'Good try. Personification makes something act like a <i>person</i>. Here the clouds are compared to <i>sheep</i> using "like".'},
+     {t:'Rhyme', fb:'No rhyming words here. Look for the little comparing word.'},
+     {t:'Simile', ok:true, fb:'Correct! A <b>simile</b> compares two things using "like" or "as". It helps us picture fluffy, grey, slow-moving clouds.'},
+     {t:'Alliteration', fb:'Alliteration is repeated starting sounds (e.g. "soggy shoulder"). This one compares two things with "like".'}],
+   hint:'Spot the little word "like". Which technique compares two things using "like" or "as"?'},
+  {skill:'Structure & effect', icon:'✂️', q:'Why do you think the writer put "<b>The next morning, it was back.</b>" in a paragraph all on its own?',
+   opts:[
+     {t:'To make the surprise stand out and build suspense', ok:true, fb:'Brilliant! A short line on its own makes the reader pause. It hits like a "dun-dun-DUN!" moment, even though {Name} tried to get rid of it.'},
+     {t:'Because the writer ran out of ideas', fb:'Writers choose short lines on purpose! Read it aloud. Does it make you pause?'},
+     {t:'To explain what the weather was like', fb:'The line isn\u2019t about the weather. What does it tell us that\u2019s surprising?'},
+     {t:'Because it\u2019s the least important line', fb:'Actually the opposite! Putting a line on its own makes it MORE noticeable.'}],
+   hint:'Read the line out loud. Does it make you speed up or pause? Is it a surprise?'},
+  {skill:'Structure & effect', icon:'✂️', q:'"<b>Everyone except {Name}.</b>" is a very short line. What effect does it have?',
+   opts:[
+     {t:'It tells us that everyone went home', fb:'Not quite. Look at what everyone else was doing (squeezing into {crowd}) compared with {Name}.'},
+     {t:'It makes the story longer', fb:'A short line actually makes the story <i>snappier</i>! Think about who it focuses on.'},
+     {t:'It introduces a brand-new character', fb:'{Name} is the main character, not someone new. Why focus on {obj} right here?'},
+     {t:'It puts a spotlight on {Name}, showing {sub} is different from everyone else', ok:true, fb:'Yes! The short line works like a spotlight: everyone else is soggy and lost, but {Name} has the {oname}. It sets up the big moment.'}],
+   hint:'Everyone else is squashed into {crowd}. Who does this short line focus on, and why are they different?'}
+];
+
+const STARTERS = ['I believe G is...','The biggest clue is...','This shows that...','Another clue is...','However, G could also be...'];
+const CLUE_WORDS = ['jasmine','tea','ink','blue','handwriting','neat','loopy','slipper','footprint','crane','humming','song','seven','secret','old-fashioned','trust','letter g',' g '];
+
+/* ===================== STATE ===================== */
+const S = { student:'Alexa', name:'', pron:'she', settingKey:null, settingCustom:'', objectKey:null, objectCustom:'',
+  choices:[], qIndex:0, answers:[], hintsUsed:0, stars:0, report:'', confidence:null, started:null, finished:null, storyStep:0, phase:'intro' };
+let timerHandle=null, timeUpShown=false;
+
+/* ===================== HELPERS ===================== */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+function setting(){ return S.settingKey==='custom' ? customSetting(S.settingCustom.trim()||'my town') : SETTINGS[S.settingKey]; }
+function object(){ return S.objectKey==='custom' ? customObject(S.objectCustom.trim()||'old toy') : OBJECTS[S.objectKey]; }
+function tokens(){
+  const p = PRONOUNS[S.pron], st = setting(), ob = object(), n = S.name.trim()||'Mei';
+  return { Name:n, sub:p.sub, Sub:cap(p.sub), Sub_:n, obj:p.obj, pos:p.pos, Pos:cap(p.pos),
+    the:ob.the, oname:ob.name, flaws:ob.flaws, secret:ob.secret, stop:st.stop, home:st.home, sky:st.sky, Sky:cap(st.sky),
+    hills:st.hills, place:st.place, Place:cap(st.place), crowd:st.crowd };
+}
+/* fill tokens (values HTML-escaped), keep our own markup, *x* -> <em> */
+function fill(str){
+  const T = tokens();
+  let out = str.replace(/\{SAVE\}/g, object().save);
+  out = out.replace(/\{(\w+)\}/g,(m,k)=> k in T ? esc(T[k]) : m);
+  return out.replace(/\*(.+?)\*/g,'<em>$1</em>');
+}
+function plain(str){ return fill(str).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); }
+function toast(msg,ms=2600){ const d=document.createElement('div'); d.className='toast'; d.innerHTML=msg; document.body.appendChild(d); setTimeout(()=>d.remove(),ms); }
+function burst(x,y){ const em=['⭐','🎉','✨','💜','🌟']; for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='burst'; s.textContent=em[i%em.length];
+  s.style.left=x+'px'; s.style.top=y+'px'; s.style.setProperty('--dx',(Math.random()*240-120)+'px'); s.style.setProperty('--dy',(Math.random()*-200-40)+'px');
+  document.body.appendChild(s); setTimeout(()=>s.remove(),1000);} }
+function setProgress(f){ $('#progress div').style.width=Math.round(f*100)+'%'; }
+function updatePills(){ $('#stars').textContent='⭐ '+S.stars; $('#hintsPill').textContent='💡 '+S.hintsUsed; }
+function fmt(sec){ const a=Math.abs(sec); return Math.floor(a/60)+':'+String(a%60).padStart(2,'0'); }
+function elapsed(){ if(!S.started) return 0; return Math.round(((S.finished||Date.now())-S.started)/1000); }
+function tick(){
+  const left = TOTAL_SECONDS - elapsed(), el=$('#timer');
+  if(left>=0){ el.textContent='⏱️ '+fmt(left); el.className='pill'+(left<=120?' low':''); }
+  else { el.textContent='⏱️ +'+fmt(left)+' extra'; el.className='pill over';
+    if(!timeUpShown){ timeUpShown=true; toast('⏰ 10 minutes are up! Finish the bit you\u2019re on, then head to the end. No rush! 😊',4500);} }
+}
+function startTimer(){ if(S.started) return; S.started=Date.now(); tick(); timerHandle=setInterval(tick,1000); }
+function stopTimer(){ if(!S.finished) S.finished=Date.now(); clearInterval(timerHandle); tick(); }
+window.addEventListener('beforeunload',e=>{ if(S.started && !S.finished){ e.preventDefault(); e.returnValue=''; }});
+
+/* full story so far (for the re-read panel and results) */
+function storyParas(upTo){
+  const out=[];
+  for(let i=0;i<STORY.length && i<upTo;i++){
+    STORY[i].paras.forEach(p=>out.push({short:p.startsWith('!'), html:fill(p.replace(/^!/,''))}));
+    if(S.choices[i]!=null) out.push({branch:true, html:fill(STORY[i].choice.opts[S.choices[i]].text)});
+  }
+  return out;
+}
+function paraHTML(list){ return list.map(p=>`<p class="${p.short?'short':''} ${p.branch?'branch':''}">${p.html}</p>`).join(''); }
+
+/* ===================== SCREENS ===================== */
+function renderIntro(){
+  S.phase='intro'; setProgress(0);
+  app.innerHTML = `<div class="card">
+    <span class="tag">📖 English Language &amp; Literature · Quest #1</span>
+    <h1>Hi Alexa! Ready to be a Story Detective? 🕵️‍♀️</h1>
+    <p>Today <b>you</b> help build a mystery story: you pick the hero, the place and a mysterious object, then make choices that change what happens. After that, you solve detective questions and write a mini detective report.</p>
+    <table class="plan">
+      <tr><td>🎨 Build your story</td><td><b>~1 min</b></td></tr>
+      <tr><td>📜 Read &amp; choose (3 choices)</td><td><b>~3½ min</b></td></tr>
+      <tr><td>❓ 8 detective questions</td><td><b>~3 min</b></td></tr>
+      <tr><td>📝 Detective report</td><td><b>~2½ min</b></td></tr>
+    </table>
+    <p class="muted">⭐ Each right answer earns stars. 💡 Stuck? Press the hint button. Hints are totally allowed (they just mean a slightly smaller score for that question). ⏱️ The timer is a guide, not a race.</p>
+    <label class="q" for="student">Your name</label>
+    <input type="text" id="student" value="${esc(S.student)}" maxlength="30">
+    <button class="btn alt" id="goBtn" style="margin-top:16px">🚀 Start my 10-minute quest!</button>
+  </div>`;
+  $('#goBtn').onclick=()=>{ S.student=$('#student').value.trim()||'Alexa'; startTimer(); renderSetup(); };
+}
+
+function renderSetup(){
+  S.phase='setup'; setProgress(.05);
+  const setOpts = Object.entries(SETTINGS).map(([k,v])=>`<button class="opt ${S.settingKey===k?'sel':''}" data-set="${k}"><span class="big">${v.icon}</span>${v.label}</button>`).join('')
+    + `<button class="opt ${S.settingKey==='custom'?'sel':''}" data-set="custom"><span class="big">✏️</span>Somewhere else</button>`;
+  const objOpts = Object.entries(OBJECTS).map(([k,v])=>`<button class="opt ${S.objectKey===k?'sel':''}" data-obj="${k}"><span class="big">${v.icon}</span>${v.label}</button>`).join('')
+    + `<button class="opt ${S.objectKey==='custom'?'sel':''}" data-obj="custom"><span class="big">✏️</span>My own idea</button>`;
+  app.innerHTML = `<div class="card">
+    <span class="tag">🎨 Step 1 · Build your story</span>
+    <h2>You're the author's assistant, ${esc(S.student)}!</h2>
+    <label class="q" for="hero">1️⃣ Name the main character</label>
+    <input type="text" id="hero" placeholder="Type a name..." maxlength="24" value="${esc(S.name)}">
+    <div class="chips">${NAME_IDEAS.map(n=>`<button class="chip" data-name="${n}">${n}</button>`).join('')}</div>
+    <label class="q">2️⃣ Is the character a...</label>
+    <div class="chips"><button class="chip ${S.pron==='she'?'sel':''}" data-pron="she">👧 girl (she/her)</button><button class="chip ${S.pron==='he'?'sel':''}" data-pron="he">👦 boy (he/him)</button></div>
+    <label class="q">3️⃣ Where does the story happen?</label>
+    <div class="grid">${setOpts}</div>
+    <input type="text" id="setCustom" placeholder="Type a place, e.g. Tokyo, Paris, Mars Base..." maxlength="30" value="${esc(S.settingCustom)}" style="margin-top:8px;display:${S.settingKey==='custom'?'block':'none'}">
+    <label class="q">4️⃣ Choose the mystery object</label>
+    <div class="grid">${objOpts}</div>
+    <input type="text" id="objCustom" placeholder="Type an object, e.g. teddy bear, water bottle..." maxlength="24" value="${esc(S.objectCustom)}" style="margin-top:8px;display:${S.objectKey==='custom'?'block':'none'}">
+    <div><button class="btn alt" id="toStory" style="margin-top:18px">📜 Start the story!</button></div>
+    <p class="muted" id="setupMsg"></p>
+  </div>`;
+  const keep=()=>{ S.name=$('#hero').value; S.settingCustom=$('#setCustom').value; S.objectCustom=$('#objCustom').value; };
+  app.querySelectorAll('[data-name]').forEach(b=>b.onclick=()=>{ $('#hero').value=b.dataset.name; keep(); });
+  app.querySelectorAll('[data-pron]').forEach(b=>b.onclick=()=>{ keep(); S.pron=b.dataset.pron; renderSetup(); });
+  app.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{ keep(); S.settingKey=b.dataset.set; renderSetup(); if(S.settingKey==='custom') $('#setCustom').focus(); });
+  app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ keep(); S.objectKey=b.dataset.obj; renderSetup(); if(S.objectKey==='custom') $('#objCustom').focus(); });
+  $('#toStory').onclick=()=>{ keep();
+    const miss=[]; if(!S.name.trim()) miss.push('a name'); if(!S.settingKey||(S.settingKey==='custom'&&!S.settingCustom.trim())) miss.push('a place');
+    if(!S.objectKey||(S.objectKey==='custom'&&!S.objectCustom.trim())) miss.push('a mystery object');
+    if(miss.length){ $('#setupMsg').innerHTML='👀 Don\u2019t forget '+miss.join(', ')+'!'; return; }
+    S.name=S.name.trim().replace(/\s+/g,' '); S.name=cap(S.name); S.objectCustom=S.objectCustom.trim().toLowerCase(); S.settingCustom=cap(S.settingCustom.trim());
+    S.storyStep=0; renderStory(); };
+}
+
+function renderStory(){
+  S.phase='story'; const i=S.storyStep; setProgress(.1+ i*.12);
+  const T=tokens(), part=STORY[i];
+  const prev = i>0 ? `<details class="reread"><summary class="muted" style="cursor:pointer">📜 Re-read the story so far</summary><div class="reread-panel">${paraHTML(storyParas(i))}</div></details>` : '';
+  const title = i===0 ? `<h1>The ${esc(object().name.split(' ').map(cap).join(' '))} That Kept Coming Back</h1>` : `<h2>Part ${i+1}</h2>`;
+  app.innerHTML = `<div class="card story">
+    <span class="tag">📜 Story · Part ${i+1} of 3</span>${title}${prev}
+    ${part.paras.map(p=>`<p class="${p.startsWith('!')?'short':''}">${fill(p.replace(/^!/,''))}</p>`).join('')}
+    <div id="branchOut"></div>
+    <div class="choice-box" id="choiceBox"><h3>🤔 ${fill(part.choice.q)}</h3>
+      <div class="choices">${part.choice.opts.map((o,k)=>`<button class="opt" data-choice="${k}"><span class="big">${o.icon}</span><span>${fill(o.label)}</span></button>`).join('')}</div></div>
+  </div>`;
+  window.scrollTo(0,0);
+  app.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{
+    const k=+b.dataset.choice; S.choices[i]=k;
+    app.querySelectorAll('[data-choice]').forEach(x=>{x.disabled=true; x.classList.toggle('sel',x===b);});
+    $('#branchOut').innerHTML=`<p class="branch">${fill(part.choice.opts[k].text)}</p>`+
+      (i===STORY.length-1?'<p class="short">🎬 THE END... or is it?</p>':'')+
+      `<button class="btn alt" id="nextPart">${i<STORY.length-1?'➡️ Keep reading':'🕵️ On to the detective questions!'}</button>`;
+    $('#choiceBox').after($('#branchOut'));
+    $('#nextPart').onclick=()=>{ if(i<STORY.length-1){ S.storyStep++; renderStory(); } else { S.qIndex=0; renderQuestion(); } };
+    $('#nextPart').scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
+
+function renderQuestion(){
+  S.phase='quiz'; const qi=S.qIndex, Q=QUESTIONS[qi]; setProgress(.46+qi*.05);
+  const a = S.answers[qi] || (S.answers[qi]={hint:false, choice:null});
+  app.innerHTML = `<div class="card">
+    <span class="tag">${Q.icon} Question ${qi+1} of ${QUESTIONS.length} · ${Q.skill}</span>
+    <h2>${fill(Q.q)}</h2>
+    <div class="answers">${Q.opts.map((o,k)=>`<button class="ans" data-ans="${k}"><b class="letter">${'ABCD'[k]}</b><span>${fill(o.t)}</span></button>`).join('')}</div>
+    <div id="hintArea">${a.hint?`<div class="hintbox">💡 ${fill(Q.hint)}</div>`:''}</div>
+    <div id="fb"></div>
+    <div><button class="btn ghost" id="hintBtn" ${a.hint?'disabled':''}>💡 ${a.hint?'Hint used':'Show a hint'}</button>
+         <button class="btn ghost" id="rereadBtn">📜 Re-read story</button></div>
+    <div id="rereadPanel"></div>
+  </div>`;
+  window.scrollTo(0,0);
+  $('#rereadBtn').onclick=()=>{ const p=$('#rereadPanel'); p.innerHTML = p.innerHTML ? '' : `<div class="reread-panel">${paraHTML(storyParas(3))}</div>`; };
+  $('#hintBtn').onclick=()=>{ if(a.hint||a.choice!=null) return; a.hint=true; S.hintsUsed++; updatePills();
+    $('#hintArea').innerHTML=`<div class="hintbox">💡 ${fill(Q.hint)}</div>`; $('#hintBtn').disabled=true; $('#hintBtn').textContent='💡 Hint used'; };
+  app.querySelectorAll('[data-ans]').forEach(b=>b.onclick=(ev)=>{
+    if(a.choice!=null) return; const k=+b.dataset.ans; a.choice=k; const o=Q.opts[k]; a.correct=!!o.ok;
+    a.points = o.ok ? (a.hint?1:2) : 0; S.stars += a.points; updatePills();
+    app.querySelectorAll('[data-ans]').forEach((x,j)=>{ x.disabled=true; if(Q.opts[j].ok) x.classList.add('right'); });
+    if(!o.ok) b.classList.add('wrong'); $('#hintBtn').disabled=true;
+    const right = Q.opts.find(x=>x.ok);
+    $('#fb').innerHTML = `<div class="feedback ${o.ok?'good':'bad'}">${o.ok?(a.hint?'✅ Correct, with a hint! +1 ⭐':'🎉 Correct! +2 ⭐'):'❌ Not this time, but now you know!'}<br>${fill(o.fb)}
+      ${o.ok?'':`<br><b>The best answer:</b> ${fill(right.t)}<br>${fill(right.fb)}`}</div>
+      <button class="btn alt" id="nextQ">${qi<QUESTIONS.length-1?'➡️ Next question':'📝 On to my detective report!'}</button>`;
+    if(o.ok) burst(ev.clientX||200, ev.clientY||300);
+    $('#nextQ').onclick=()=>{ if(qi<QUESTIONS.length-1){ S.qIndex++; renderQuestion(); } else renderReport(); };
+    $('#nextQ').scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
+
+function analyseReport(t){
+  const sentences = (t.match(/[^.!?]+[.!?]+/g)||[]).filter(s=>s.trim().length>3).length + (/[^.!?\s]\s*$/.test(t.trim())&&t.trim()?1:0);
+  const low=' '+t.toLowerCase().replace(/[^a-z\- ]/g,' ')+' ';
+  const sec=object().secret.toLowerCase().replace(/^the /,'');
+  const found=[...new Set(CLUE_WORDS.concat([sec]).filter(w=>low.includes(w)).map(w=>w.trim()))]; if(found.includes('letter g')) found.splice(found.indexOf('g'),found.indexOf('g')>-1?1:0);
+  const words = t.trim()? t.trim().split(/\s+/).length : 0;
+  return {sentences, found, words};
+}
+function renderReport(){
+  S.phase='report'; setProgress(.88);
+  app.innerHTML = `<div class="card">
+    <span class="tag">📝 Detective report</span>
+    <h2>Who do YOU think "G" is? 🤔</h2>
+    <p>Write <b>3–4 sentences</b>. Use <b>at least one clue</b> from the story (you can quote it with "speech marks"!).<br>
+    ⭐ <i>Challenge:</i> start with an opening sentence that grabs your reader.</p>
+    <p class="muted">Tap a sentence starter to add it:</p>
+    <div class="chips">${STARTERS.map(s=>`<button class="chip" data-start="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+    <textarea id="report" placeholder="Type your detective report here...">${esc(S.report)}</textarea>
+    <div class="stats" id="rstats"></div>
+    <details class="reread"><summary class="muted" style="cursor:pointer">📜 Re-read the story</summary><div class="reread-panel">${paraHTML(storyParas(3))}</div></details>
+    <label class="q">🌡️ How did today's quest feel?</label>
+    <div class="conf">${[['1','🌱','Tricky!'],['2','🌿','OK-ish'],['3','🌳','Pretty good'],['4','🌟','Easy-peasy!']].map(c=>`<button class="opt ${S.confidence===c[0]?'sel':''}" data-conf="${c[0]}"><span class="big">${c[1]}</span>${c[0]} · ${c[2]}</button>`).join('')}</div>
+    <button class="btn alt" id="finish" style="margin-top:16px">🏁 Finish &amp; see my results</button>
+    <p class="muted" id="repMsg"></p>
+  </div>`;
+  const ta=$('#report');
+  const upd=()=>{ S.report=ta.value; const r=analyseReport(ta.value);
+    $('#rstats').innerHTML=`<span>✍️ ${r.words} words</span><span>📏 ${r.sentences} sentence${r.sentences===1?'':'s'} ${r.sentences>=3&&r.sentences<=4?'✅':(r.sentences>4?'(great, plenty!)':'(aim for 3–4)')}</span><span>🔍 Clue words spotted: ${r.found.length?r.found.join(', '):'none yet'}</span>`; };
+  ta.oninput=upd; upd();
+  app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{ const s=b.dataset.start.replace(/\.\.\.$/,' ');
+    ta.value = ta.value.trim() ? ta.value.replace(/\s*$/,'')+' '+s : s; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); upd(); });
+  app.querySelectorAll('[data-conf]').forEach(b=>b.onclick=()=>{ S.confidence=b.dataset.conf; app.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  $('#finish').onclick=()=>{ S.report=ta.value;
+    if(S.report.trim().split(/\s+/).length<5){ $('#repMsg').textContent='✍️ Write a little more first: just 3–4 sentences!'; return; }
+    if(!S.confidence){ $('#repMsg').textContent='🌡️ Pick how the quest felt (1–4).'; return; }
+    stopTimer(); renderSummary(); };
+}
+
+/* Skill scoring: each skill has 2 questions. Correct, no hint = 2 pts; correct with hint = 1; wrong = 0.
+   Skill level = points (0-4), minimum 1. A hint therefore costs one level. */
+function skillScores(){
+  const sk={}; QUESTIONS.forEach((Q,i)=>{ const a=S.answers[i]||{}; sk[Q.skill]=sk[Q.skill]||{pts:0,hints:0,correct:0,n:0,icon:Q.icon};
+    sk[Q.skill].pts+=a.points||0; sk[Q.skill].hints+=a.hint?1:0; sk[Q.skill].correct+=a.correct?1:0; sk[Q.skill].n++; });
+  Object.values(sk).forEach(v=>v.level=Math.max(1,Math.min(4,v.pts))); return sk;
+}
+const LEVELS={1:'🌱 Beginning',2:'🌿 Developing',3:'🌳 Secure',4:'🌟 Extending'};
+
+function resultsText(){
+  const T=tokens(), sk=skillScores(), r=analyseReport(S.report), st=setting(), ob=object();
+  const d=new Date(S.started||Date.now());
+  const L=[];
+  L.push(`${S.student.toUpperCase()}'S RESULTS · Session 01 · Story Detective (English L&L diagnostic)`);
+  L.push(`Date: ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+  L.push(`Time taken: ${fmt(elapsed())} (target 10:00)`);
+  L.push(`Stars: ${S.stars}/16 · Questions correct: ${S.answers.filter(a=>a&&a.correct).length}/8 · Hints used: ${S.hintsUsed}`);
+  L.push('','--- MY STORY ---');
+  L.push(`Main character: ${T.Name} (${S.pron==='she'?'she/her':'he/him'})`);
+  L.push(`Setting: ${st.label}${S.settingKey==='custom'?' (own idea)':''}`);
+  L.push(`Mystery object: ${ob.label}${S.objectKey==='custom'?' (own idea)':''}`);
+  STORY.forEach((p,i)=>L.push(`Choice ${i+1}: ${plain(p.choice.q)} -> ${S.choices[i]!=null?plain(p.choice.opts[S.choices[i]].label):'(none)'}`));
+  L.push('','--- DETECTIVE QUESTIONS ---');
+  QUESTIONS.forEach((Q,i)=>{ const a=S.answers[i]||{};
+    const ans = a.choice!=null ? `${'ABCD'[a.choice]}. ${plain(Q.opts[a.choice].t)}` : '(not answered)';
+    const right = Q.opts.findIndex(o=>o.ok);
+    L.push(`Q${i+1} [${Q.skill}] ${a.correct?'CORRECT':'WRONG'}${a.hint?' (hint used)':''} | answered: ${ans}${a.correct?'':` | best answer: ${'ABCD'[right]}`}`); });
+  L.push('','--- SKILL SCORES (1-4) ---');
+  Object.entries(sk).forEach(([k,v])=>L.push(`${k}: ${v.level}/4 ${LEVELS[v.level].replace(/^\S+ /,'')} (${v.correct}/${v.n} correct, ${v.hints} hint${v.hints===1?'':'s'})`));
+  L.push('Detective report (writing): to be marked by a grown-up, 1-4');
+  L.push('','--- MY DETECTIVE REPORT: Who is G? ---');
+  L.push(S.report.trim());
+  L.push(`(${r.words} words, ${r.sentences} sentences, clue words spotted: ${r.found.join(', ')||'none'})`);
+  L.push('',`How the quest felt (1-4): ${S.confidence} ${LEVELS[S.confidence]?LEVELS[S.confidence].replace(/^\S+ /,''):''}`);
+  return L.join('\n');
+}
+
+function renderSummary(){
+  S.phase='summary'; setProgress(1);
+  const sk=skillScores(), txt=resultsText(), r=analyseReport(S.report);
+  app.innerHTML = `<div class="card">
+    <span class="tag">🏆 Quest complete!</span>
+    <h1>Amazing detective work, ${esc(S.student)}! 🎉</h1>
+    <div class="stats"><span>⭐ ${S.stars} / 16 stars</span><span>✅ ${S.answers.filter(a=>a&&a.correct).length} / 8 correct</span><span>💡 ${S.hintsUsed} hint${S.hintsUsed===1?'':'s'}</span><span>⏱️ ${fmt(elapsed())}</span></div>
+    <h2 style="margin-top:18px">Your skill scores</h2>
+    ${Object.entries(sk).map(([k,v])=>`<div class="skill"><div class="row"><span>${v.icon} ${k}</span><span>${v.level}/4 · ${LEVELS[v.level]}</span></div>
+      <div class="bar"><div class="lvl${v.level}" style="width:${v.level*25}%"></div></div>
+      <div class="muted">${v.correct}/${v.n} correct${v.hints?`, ${v.hints} hint${v.hints>1?'s':''} used`:''}</div></div>`).join('')}
+    <div class="skill"><div class="row"><span>📝 Detective report</span><span>Grown-up marks this one</span></div>
+      <div class="muted">${r.words} words · ${r.sentences} sentences · 🔍 clues: ${r.found.join(', ')||'none spotted'}</div></div>
+    <h2 style="margin-top:18px">📋 Send your results</h2>
+    <p>Tap the button, then paste your results into an email or message.</p>
+    <button class="btn alt" id="copyBtn">📋 Copy my results</button>
+    <a class="btn ghost" id="mailBtn" href="mailto:?subject=${encodeURIComponent('Session 01 results: '+S.student)}&body=${encodeURIComponent(txt)}">✉️ Open in email</a>
+    <p class="muted" id="copyMsg"></p>
+    <pre id="resultText">${esc(txt)}</pre>
+    <button class="btn ghost" id="again">🔁 Play the story again (new choices)</button>
+  </div>`;
+  burst(innerWidth/2, 200);
+  $('#copyBtn').onclick=async()=>{
+    let ok=false;
+    try{ if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(txt); ok=true; } }catch(e){}
+    if(!ok){ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      try{ ok=document.execCommand('copy'); }catch(e){} ta.remove(); }
+    $('#copyMsg').innerHTML = ok ? '✅ Copied! Now paste it into an email or message to Mum.' : '⚠️ Couldn\u2019t copy automatically. Press and hold the text below, choose "Select all" and then "Copy".';
+    window.__copied = ok ? txt : null;
+  };
+  $('#again').onclick=()=>{ if(confirm('Start a new story? (Your results above will be cleared, so copy them first!)')) location.reload(); };
+}
+
+/* go */
+renderIntro(); updatePills();
+</script>
+</body>
+</html>
